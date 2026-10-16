@@ -178,6 +178,13 @@
   .boton.claro { background: var(--fondo); color: var(--tinta); }
   body[data-tema="oscuro"] .boton:not(.claro) { background: var(--oro); color: #1c1400; }
   .nota { margin: 0 8px; font-size: 12px; color: var(--suave); line-height: 1.55; font-weight: 500; }
+  .seccion { margin: 0 4px 16px; }
+  .seccion h3 { margin: 0 4px 8px; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--suave); font-weight: 800; }
+  .chips-c { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip-c { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 99px; background: var(--fondo); font-size: 13.5px; font-weight: 700; line-height: 1.2; }
+  .chip-c.lugar { border: 1px solid var(--raya); background: var(--panel); }
+  .chip-c.lugar svg { width: 14px; height: 14px; color: var(--suave); }
+  .chip-c.mas { color: #1a73e8; background: transparent; border: 1px dashed var(--raya); }
   body:not(.en-ficha) #vista-ficha, body.en-ficha #vista-lista { display: none; }
   body[data-pestana="ir"] #vista-lista, body[data-pestana="ir"] #vista-ficha, body[data-pestana="lineas"] #vista-ir { display: none !important; }
   body[data-pestana="ir"] .fabs { display: none; }
@@ -399,7 +406,7 @@
     <div class="cab arrastre">
       <div class="cab-fila"><h2>Líneas de micro</h2><span class="sub" id="l-sub"></span></div>
       <label class="buscar"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.500"/><path d="M20 20l-4.200-4.200"/></svg>
-        <input id="buscar" type="search" placeholder="Escriba su barrio o el número" autocomplete="off" enterkeyhint="search" aria-label="Buscar línea o barrio"></label>
+        <input id="buscar" type="search" placeholder="Número, barrio, calle o lugar" autocomplete="off" enterkeyhint="search" aria-label="Buscar línea o barrio"></label>
     </div>
     <div class="cuerpo" id="lista"></div>
   </div>
@@ -785,6 +792,41 @@ window.addEventListener("pointermove", alMover);
 window.addEventListener("pointerup", alSoltar);
 window.addEventListener("pointercancel", () => { if (arrastre) { arrastre = null; ponerAltura(alturaCercana(alturaPx)); } });
 
+// ------------------------------------------------------------ por dónde pasa cada línea
+// Se cruza el recorrido grabado con las calles y lugares del mapa: calles en el orden en que las recorre
+// y lugares a menos de 150 m de la ruta. Se calcula de a una línea, sin trabar la pantalla.
+function analizarLinea(l) {
+  if (l.calles) return l;
+  const muestras = [];
+  for (const t of l.orden) { let ult = null; for (const q of t.pts) if (!ult || metros(ult, q) >= 35) { muestras.push(q); ult = q; } }
+  const tramos = [];
+  for (const q of muestras) {
+    const n = calleCerca(q, 30);
+    if (!n) continue;
+    const u = tramos[tramos.length - 1];
+    if (u && u.n === n) u.c++; else tramos.push({ n, c: 1 });
+  }
+  const vistas = new Set();
+  l.calles = tramos.filter(x => x.c >= 3).map(x => x.n).filter(n => !vistas.has(n) && vistas.add(n));   // al menos ~100 m por esa calle
+  const cerca = [];
+  for (const x of LUG.lugares) {
+    if (/Farmacia|Comunidad|Ciudad|Surtidor/.test(x[1])) continue;
+    const q = [x[2], x[3]];
+    let mejor = Infinity, k = 0;
+    muestras.forEach((m, i) => { const d = metros(q, m); if (d < mejor) { mejor = d; k = i; } });
+    if (mejor < 150) cerca.push({ n: x[0], sub: x[1], p: q, k });
+  }
+  const v2 = new Set();
+  l.cerca = cerca.sort((a, b) => a.k - b.k).filter(x => !v2.has(x.n) && v2.add(x.n));
+  l.buscaExtra = sinTildes(l.calles.join(" | ") + " | " + l.cerca.map(x => x.n).join(" | "));
+  return l;
+}
+(function analizarDeAUna(i = 0) {               // en segundo plano, una línea cada vez
+  if (i >= lineas.length) { if (pestana === "lineas" && $("buscar").value) pintarLista(); return; }
+  const sig = () => analizarDeAUna(i + 1);
+  setTimeout(() => { analizarLinea(lineas[i]); (window.requestIdleCallback || setTimeout)(sig); }, i ? 0 : 1500);
+})();
+
 // ------------------------------------------------------------------ lista
 function metrosA(l) {                      // distancia de mi ubicación al punto más cercano de la línea
   if (!miPunto) return null;
@@ -794,7 +836,7 @@ function metrosA(l) {                      // distancia de mi ubicación al punt
 }
 function pintarLista() {
   const texto = sinTildes($("buscar").value.trim()), caja = $("lista");
-  let lista = lineas.filter(l => !texto || l.busca.includes(texto));
+  let lista = lineas.filter(l => !texto || l.busca.includes(texto) || (l.buscaExtra && texto.length >= 3 && l.buscaExtra.includes(texto)));
   if (miPunto) lista = lista.map(l => ({ l, d: metrosA(l) })).sort((a, b) => a.d - b.d).map(x => Object.assign(x.l, { cerca: x.d }));
   $("l-sub").textContent = miPunto ? "Ordenadas por cercanía" : datos.salida ? "Salen de " + datos.salida : lineas.length + " líneas";
   caja.innerHTML = "";
@@ -809,7 +851,8 @@ function pintarLista() {
       <span class="l-km tabular">${num(l.km, 1)} km<small>${l.min ? num(l.min, 0) + " min" : ""}</small></span>${FLECHA}`;
     b.querySelector(".chip").textContent = l.numero;
     b.querySelector(".l-nombre").textContent = l.titulo;
-    b.querySelector(".l-sub").textContent = l.destino ? "Va a " + l.destino : l.tipo;
+    const porQue = texto && !l.busca.includes(texto) && l.calles ? [...l.calles, ...l.cerca.map(x => x.n)].find(n => sinTildes(n).includes(texto)) : null;
+    b.querySelector(".l-sub").textContent = porQue ? "Pasa por " + porQue : l.destino ? "Va a " + l.destino : l.tipo;
     if (miPunto && l.cerca != null && l.cerca < 5000) {
       const c = document.createElement("span");
       c.className = "l-cerca";
@@ -846,9 +889,11 @@ function pintarFicha(l) {
       <div><b>${num(l.min, 0)}<i>min</i></b><span>dura el viaje</span></div>
       <div><b>${num(l.km, 1)}<i>km</i></b><span>de recorrido</span></div></div>
     <div class="recorrido">${recorrido}</div>
+    <div class="seccion" id="f-sec-calles"><h3>Pasa por</h3><div class="chips-c" id="f-calles"></div></div>
+    <div class="seccion" id="f-sec-cerca"><h3>Cerca de su recorrido</h3><div class="chips-c" id="f-cerca"></div></div>
     <div class="acciones">
-      ${paradasDe(l).map(q => `<a class="boton ir" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${q.p[0]},${q.p[1]}&travelmode=walking">
-        <svg class="i" viewBox="0 0 24 24"><path d="M12 21s7-6.200 7-11.500A7 7 0 0 0 5 9.500C5 14.800 12 21 12 21z"/><circle cx="12" cy="9.500" r="2.500"/></svg><span></span></a>`).join("")}
+      ${paradasDe(l).map((q, i) => `<button class="boton ir" data-i="${i}">
+        <svg class="i" viewBox="0 0 24 24"><path d="M12 21s7-6.200 7-11.500A7 7 0 0 0 5 9.500C5 14.800 12 21 12 21z"/><circle cx="12" cy="9.500" r="2.500"/></svg><span></span></button>`).join("")}
       <button class="boton claro" id="b-compartir"><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.500"/><circle cx="18" cy="6" r="2.500"/><circle cx="18" cy="18" r="2.500"/><path d="M8.200 10.900l7.600-3.800M8.200 13.100l7.600 3.800"/></svg>Compartir</button>
     </div>
     <p class="nota">El tiempo se midió viajando en el micro. Puede tardar más o menos según la hora.</p>`;
@@ -857,7 +902,37 @@ function pintarFicha(l) {
   const textos = circuito ? [salida, l.destino || salida] : [salida, l.ida ? (l.destino || "Final de la ruta") : null, l.vuelta ? salida : null].filter(Boolean);
   nombres.forEach((n, i) => n.insertBefore(document.createTextNode(textos[i] || ""), n.firstChild));
   const dos = paradasDe(l).length > 1;
-  caja.querySelectorAll(".boton.ir span").forEach((e, i) => { e.textContent = dos ? "Ir a " + (paradasDe(l)[i].zona || (i ? "la parada de regreso" : "la parada")) : "Cómo llegar a la parada"; });
+  caja.querySelectorAll(".boton.ir span").forEach((e, i) => { e.textContent = dos ? "Ir a " + (paradasDe(l)[i].zona || (i ? "la parada de regreso" : "la parada")) : "Ir a la parada"; });
+  caja.querySelectorAll(".boton.ir").forEach(b => b.addEventListener("click", () => {
+    const q = paradasDe(l)[+b.dataset.i];
+    irAlLugar({ n: nombreParada(q) + " · " + l.titulo, sub: "Parada", p: q.p });
+  }));
+  // por dónde pasa y qué hay cerca
+  analizarLinea(l);
+  const fc = $("f-calles"), fl = $("f-cerca");
+  const ponerCalles = todas => {
+    fc.innerHTML = "";
+    (todas ? l.calles : l.calles.slice(0, 8)).forEach(n => { const c = document.createElement("span"); c.className = "chip-c"; c.textContent = n; fc.appendChild(c); });
+    if (!todas && l.calles.length > 8) {
+      const m = document.createElement("button");
+      m.className = "chip-c mas";
+      m.textContent = "+ " + (l.calles.length - 8) + " calles más";
+      m.addEventListener("click", () => ponerCalles(true));
+      fc.appendChild(m);
+    }
+  };
+  ponerCalles(false);
+  $("f-sec-calles").hidden = !l.calles.length;
+  l.cerca.slice(0, 10).forEach(x => {
+    const c = document.createElement("button");
+    c.className = "chip-c lugar";
+    c.innerHTML = ICONO.pin + "<span></span>";
+    c.querySelector("span").textContent = x.n;
+    c.title = "Cómo llegar a " + x.n;
+    c.addEventListener("click", () => irAlLugar({ n: x.n, sub: x.sub, p: x.p }));
+    fl.appendChild(c);
+  });
+  $("f-sec-cerca").hidden = !l.cerca.length;
   caja.querySelector(".acciones").classList.toggle("tres", dos);
   $("b-compartir").addEventListener("click", () => compartir(l));
   paradasDe(l).forEach((q, i) => {                 // fotos de la parada: solo aparecen si existen
@@ -1640,6 +1715,17 @@ function quitarViaje() {
   atenuarLineas(false);
   pintarSugerencias();
   if (!lateral.matches) ponerAltura(alturaInicio());
+}
+
+// Desde la pantalla de líneas: "cómo llegar" a una parada o a un lugar, con el planificador propio.
+function irAlLugar(x) {
+  viaje.hasta = x;
+  if (!viaje.desde) viaje.desde = { n: "Mi ubicación", gps: true, p: null };
+  viaje.opcion = null;
+  viaje.opciones = [];
+  irPestana("ir");
+  pintarCampos();
+  calcularViaje();
 }
 
 // ================================================================ pestañas
