@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#0e2238">
 <meta name="description" content="Rutas, distancias y tiempos de las líneas de micros de Camiri.">
 <title>Micros de Camiri</title>
@@ -50,6 +50,14 @@
   .ruta { }
   .pin { display: grid; place-items: center; width: max-content; transform: translate(-50%, -50%); min-width: 28px; height: 28px; padding: 0 9px; border-radius: 14px;
          color: #fff; font-weight: 800; font-size: 12.5px; background: var(--c); border: 2.5px solid #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, .35); white-space: nowrap; }
+  /* mi ubicación: punto azul y, si el teléfono lo sabe, un cono hacia donde mira */
+  .yo-caja { position: relative; width: 18px; height: 18px; transform: translate(-50%, -50%); }
+  .yo-caja .cono { position: absolute; left: 50%; top: 50%; width: 118px; height: 118px; border-radius: 50%; display: none; pointer-events: none;
+                   transform: translate(-50%, -50%) rotate(var(--rumbo, 0deg));
+                   background: conic-gradient(from -30deg, rgba(26, 115, 232, .5) 0deg 60deg, transparent 60deg);   /* abanico parejo hacia donde mira */
+                   -webkit-mask: radial-gradient(circle, #000 0, #000 26%, transparent 50%); mask: radial-gradient(circle, #000 0, #000 26%, transparent 50%); }
+  .yo-caja.con-rumbo .cono { display: block; }
+  .yo-caja .yo { position: absolute; inset: 0; }
   .yo { width: 18px; height: 18px; border-radius: 50%; background: #1a73e8; border: 3px solid #fff; box-shadow: 0 0 0 7px rgba(26, 115, 232, .22); }
 
   /* ----------------------------------------------------------------- barra */
@@ -77,7 +85,25 @@
   /* ------------------------------------------------------------------ hoja */
   .hoja { position: fixed; z-index: 600; left: 0; right: 0; bottom: var(--nav); height: var(--hmax, 46vh); transform: translateY(var(--baja, 0px)); background: var(--panel); border-radius: 24px 24px 0 0; box-shadow: var(--sombra);
           display: flex; flex-direction: column; transition: transform .34s cubic-bezier(.2, .8, .2, 1); will-change: transform; }
-  body.escribiendo .nav, body.escribiendo .fabs, body.escribiendo .fab-centro { display: none; }
+  body.escribiendo .nav, body.escribiendo .fabs, body.escribiendo .fab-centro, body.escribiendo .b-vista { display: none; }
+  /* "Saliendo de": una línea chica debajo del buscador para planear el viaje desde otro lugar */
+  .desde-mini { display: flex; align-items: center; gap: 8px; width: 100%; margin: 9px 0 0; padding: 0 6px; font-size: 13.5px; font-weight: 700; color: var(--suave); text-align: left; }
+  .desde-mini i { width: 9px; height: 9px; border-radius: 50%; background: #1a73e8; flex: none; }
+  .desde-mini span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .desde-mini b { margin-left: auto; color: #1a73e8; flex: none; }
+  body.con-destino .desde-mini, body.ver-desde .desde-mini { display: none; }
+  body.ver-desde #c-desde { display: block !important; }
+  body.ver-desde .campos { padding-right: 0; }
+  /* cambiar entre mapa y foto satelital */
+  .b-vista { position: fixed; z-index: 450; right: 12px; top: calc(var(--barra) + var(--arriba) + 12px); height: 40px; padding: 0 13px 0 10px; border-radius: 20px;
+             display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; background: var(--panel); color: var(--tinta); box-shadow: 0 4px 14px rgba(10, 25, 45, .22); }
+  .b-vista svg { width: 18px; height: 18px; }
+  body.eligiendo .b-vista { display: none; }
+  body.satelite .rb { color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; }
+  body.satelite #mapa { background: #2b3227; }
+  /* modo de prueba */
+  .prueba { position: fixed; z-index: 3000; left: 6px; top: calc(var(--barra) + var(--arriba) + 6px); max-width: 64vw; padding: 7px 9px; border-radius: 10px; background: rgba(0, 0, 0, .78);
+            color: #b8ffb8; font: 600 11px/1.45 ui-monospace, Menlo, Consolas, monospace; pointer-events: none; white-space: pre-wrap; }
   /* botón para centrar el mapa en donde estoy */
   .fab-centro { position: fixed; z-index: 450; right: 12px; bottom: calc(var(--nav) + 14px); width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center;
                 background: var(--panel); color: var(--tinta); box-shadow: 0 6px 18px rgba(10, 25, 45, .24); will-change: transform;
@@ -362,6 +388,7 @@
           <button class="limpiar" data-campo="desde" aria-label="Borrar"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></label>
         <label class="campo" id="c-hasta"><i class="b"></i><svg class="i lupa" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.500"/><path d="M20 20l-4.200-4.200"/></svg><input id="hasta" type="search" placeholder="¿A dónde quiere ir?" autocomplete="off" enterkeyhint="search" aria-label="A dónde quiere ir">
           <button class="limpiar" data-campo="hasta" aria-label="Borrar"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></label>
+        <button class="desde-mini" id="b-desde-mini"><i></i><span id="desde-mini-txt">Saliendo de: Mi ubicación</span><b>Cambiar</b></button>
         <button class="b-invertir" id="b-invertir" aria-label="Cambiar origen y destino"><svg class="i" viewBox="0 0 24 24"><path d="M8 4v15M4.500 7.500L8 4l3.500 3.500M16 20V5M12.500 16.500L16 20l3.500-3.500"/></svg></button>
       </div>
     </div>
@@ -388,6 +415,8 @@
   </div>
 </section>
 
+<button class="b-vista" id="b-vista" aria-label="Cambiar entre mapa y foto satelital">
+  <svg class="i" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg><span id="b-vista-txt">Satélite</span></button>
 <button class="fab-centro" id="b-centrar" aria-label="Centrar el mapa en mi ubicación" title="Mi ubicación">
   <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.500"/><circle cx="12" cy="12" r="2.200" fill="currentColor"/><path d="M12 2.500v3M12 18.500v3M2.500 12h3M18.500 12h3"/></svg></button>
 <nav class="nav" id="nav">
@@ -483,7 +512,7 @@ oscuro.addEventListener("change", ponerTema);
 
 // ------------------------------------------------------------------- mapa
 const CAJA_MAPA = window.MAPA_BASE ? L.latLngBounds([window.MAPA_BASE.caja[0], window.MAPA_BASE.caja[1]], [window.MAPA_BASE.caja[2], window.MAPA_BASE.caja[3]]) : null;
-const mapa = L.map("mapa", { zoomControl: false, renderer: L.svg({ padding: .5 }), minZoom: 13, maxZoom: 19,
+const mapa = L.map("mapa", { zoomControl: false, renderer: L.svg({ padding: .25 }), minZoom: 13, maxZoom: 19, fadeAnimation: false,
   maxBounds: CAJA_MAPA ? CAJA_MAPA.pad(.15) : null, maxBoundsViscosity: .8 }).setView(CAMIRI, 14);   // las rutas se dibujan de más alrededor, para que no se corten al mover   // las rutas se dibujan de más alrededor, para que no se corten al mover
 const calles = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Mapa &copy; Esri" });
 const satelite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, maxNativeZoom: 17, attribution: "Imágenes &copy; Esri" });
@@ -520,11 +549,22 @@ function dibujarBase() {
   if (typeof grosorBase === "function") grosorBase();
 }
 // El fondo son imágenes ya dibujadas (carpeta "teselas", hechas con los datos de OpenStreetMap): el celular solo las desplaza.
+let fondoMapa = null;
 if (BASE) {
-  L.tileLayer("teselas/{z}/{x}/{y}.png", { minZoom: 13, maxNativeZoom: 17, maxZoom: 19, bounds: CAJA_MAPA, keepBuffer: 4, updateWhenZooming: false,
+  fondoMapa = L.tileLayer("teselas/{z}/{x}/{y}.png", { minZoom: 13, maxNativeZoom: 17, maxZoom: 19, bounds: CAJA_MAPA, keepBuffer: 2, updateWhenZooming: false,
     attribution: "&copy; colaboradores de OpenStreetMap" }).addTo(mapa);
   capaRotulos.addTo(mapa);
 } else calles.addTo(mapa);
+// Foto satelital (opcional): solo se descarga si la persona la elige, y necesita internet.
+const VISTA = "micros-vista";
+function ponerVista(sat, guardar = true) {
+  document.body.classList.toggle("satelite", sat);
+  $("b-vista-txt").textContent = sat ? "Mapa" : "Satélite";
+  if (sat) { satelite.addTo(mapa); if (fondoMapa) mapa.removeLayer(fondoMapa); }
+  else { mapa.removeLayer(satelite); if (fondoMapa) fondoMapa.addTo(mapa); }
+  if (guardar) try { localStorage.setItem(VISTA, sat ? "satelite" : "mapa"); } catch (e) { /* modo privado */ }
+}
+satelite.on("tileerror", () => { if (document.body.classList.contains("satelite") && !navigator.onLine) { ponerVista(false, false); avisar("La foto satelital necesita internet."); } });
 function grosorBase() {
   const z = mapa.getZoom(), f = z <= 12 ? .3 : z <= 13 ? .45 : z <= 14 ? .65 : z <= 15 ? 1 : z <= 16 ? 1.7 : z <= 17 ? 2.8 : 4.2;
   for (const [c, ancho] of trazosBase) c.setStyle({ weight: Math.max(.6, ancho * f) });
@@ -667,7 +707,7 @@ function encuadrar(pts, animado = true) {
 const altoNav = () => lateral.matches ? 0 : ($("nav") ? $("nav").offsetHeight : 64);
 // tres alturas: baja (buscador y categorías), media y casi toda la pantalla
 // cuatro alturas: casi oculto (solo la manija y el buscador), baja, media y casi toda la pantalla
-const paradas = () => { const libre = window.innerHeight - altoNav(), media = Math.round(libre * .5); return [96, Math.min(media, 262), media, libre - 70]; };
+const paradas = () => { const libre = window.innerHeight - altoNav(), media = Math.round(libre * .5); return [96, Math.min(media, 290), media, libre - 70]; };
 const ALTA = () => paradas()[3], MEDIA = () => paradas()[2];
 let alturaPx = 0;
 const alturaActual = () => lateral.matches ? 0 : alturaPx;
@@ -693,7 +733,12 @@ const vv = window.visualViewport;
 function modoEscribir(si) {
   if (lateral.matches) return;
   const hoja = $("hoja");
-  if (si) { document.body.classList.add("escribiendo"); ajustarTeclado(); return; }
+  if (si) {
+    document.body.classList.add("escribiendo");
+    ajustarTeclado();
+    for (const ms of [120, 300, 600, 900]) setTimeout(ajustarTeclado, ms);   // el teclado tarda en terminar de abrirse
+    return;
+  }
   if (!document.body.classList.contains("escribiendo")) return;
   document.body.classList.remove("escribiendo");
   hoja.style.bottom = "";
@@ -701,6 +746,7 @@ function modoEscribir(si) {
 }
 function ajustarTeclado() {
   if (!document.body.classList.contains("escribiendo")) return;
+  if (window.scrollY || document.documentElement.scrollTop) window.scrollTo(0, 0);   // el navegador a veces corre la pantalla para mostrar el campo
   const hoja = $("hoja"), alto = vv ? vv.height : window.innerHeight, teclado = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
   alturaPx = Math.round(alto * .64);
   hoja.style.bottom = teclado + "px";
@@ -954,7 +1000,38 @@ function avisar(texto) {
 function ponerMiPunto(p) {
   miPunto = p;
   if (marcaYo) { marcaYo.setLatLng(p); return; }
-  marcaYo = L.marker(p, { interactive: false, keyboard: false, icon: L.divIcon({ className: "", html: '<div class="yo"></div>', iconSize: [18, 18] }) }).addTo(mapa);
+  marcaYo = L.marker(p, { interactive: false, keyboard: false, zIndexOffset: 800,
+    icon: L.divIcon({ className: "", html: '<div class="yo-caja"><i class="cono"></i><i class="yo"></i></div>', iconSize: [0, 0] }) }).addTo(mapa);
+  if (rumbo !== null) ponerRumbo(rumbo, true);
+}
+// Hacia dónde mira el teléfono (brújula). Si la persona camina, también sirve la dirección del GPS.
+let rumbo = null, brujula = false, cuadroRumbo = 0;
+function ponerRumbo(h, forzar = false) {
+  if (h == null || isNaN(h)) return;
+  h = (h + 360) % 360;
+  if (!forzar && rumbo !== null && Math.abs(((h - rumbo + 540) % 360) - 180) < 4) return;   // cambios chicos no se dibujan
+  rumbo = h;
+  if (cuadroRumbo) return;
+  cuadroRumbo = requestAnimationFrame(() => {
+    cuadroRumbo = 0;
+    const el = marcaYo && marcaYo.getElement() && marcaYo.getElement().firstChild;
+    if (el) { el.classList.add("con-rumbo"); el.style.setProperty("--rumbo", rumbo + "deg"); }
+  });
+}
+function alOrientar(e) {
+  let h = null;
+  if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;                    // iPhone
+  else if (e.absolute && e.alpha != null) h = 360 - e.alpha;                          // Android
+  if (h == null) return;
+  const giro = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+  ponerRumbo(h + giro);
+}
+function activarBrujula() {                      // se llama desde un toque: el iPhone pide permiso
+  if (brujula || !window.DeviceOrientationEvent) return;
+  brujula = true;
+  if (typeof DeviceOrientationEvent.requestPermission === "function")
+    DeviceOrientationEvent.requestPermission().then(r => { if (r === "granted") window.addEventListener("deviceorientation", alOrientar); }).catch(() => {});
+  else window.addEventListener("ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation", alOrientar);
 }
 const LUG = window.LUGARES_CAMIRI || { lugares: [], calles: { nombres: [], pts: [] } };
 const metros = (a, b) => { const dy = (a[0] - b[0]) * 111320, dx = (a[1] - b[1]) * 111320 * Math.cos(a[0] * Math.PI / 180); return Math.hypot(dx, dy); };
@@ -1022,6 +1099,7 @@ function guardarReciente(x) {
 
 function pintarCampos() {
   document.body.classList.toggle("con-destino", !!viaje.hasta);
+  $("desde-mini-txt").textContent = "Saliendo de: " + (viaje.desde ? viaje.desde.n : "elija un lugar");
   for (const c of ["desde", "hasta"]) {
     const v = viaje[c], input = $(c);
     if (document.activeElement !== input) input.value = v ? v.n : "";
@@ -1143,14 +1221,23 @@ function pedirUbicacion() {
   }).finally(() => { pidiendo = null; });
   return pidiendo;
 }
+let siguiendo = false, relojVigilar = null, volando = false;
 function afinarUbicacion() {
-  if (vigilando !== null || !navigator.geolocation) return;
+  if (!navigator.geolocation) return;
+  clearTimeout(relojVigilar);
+  relojVigilar = setTimeout(dejarDeVigilar, siguiendo ? 600000 : 120000);   // se apaga solo, para cuidar la batería
+  if (vigilando !== null) return;
   vigilando = navigator.geolocation.watchPosition(pos => {
     ultimaUbic = { p: [pos.coords.latitude, pos.coords.longitude], t: Date.now() };
     if (marcaYo) marcaYo.setLatLng(ultimaUbic.p);
-  }, () => {}, { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 });
-  setTimeout(() => { navigator.geolocation.clearWatch(vigilando); vigilando = null; }, 120000);   // dos minutos y se apaga, para cuidar la batería
+    if (pos.coords.speed > 1 && pos.coords.heading != null) ponerRumbo(pos.coords.heading);
+    const c = mapa.getCenter();
+    if (siguiendo && !volando && metros([c.lat, c.lng], ultimaUbic.p) > 8) mapa.panTo(ultimaUbic.p, { animate: !calmo, duration: .4 });   // solo si de verdad se movió
+  }, () => {}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
 }
+function dejarDeVigilar() { if (vigilando !== null) navigator.geolocation.clearWatch(vigilando); vigilando = null; }
+function dejarDeSeguir() { siguiendo = false; $("b-centrar").classList.remove("activo"); }
+document.addEventListener("visibilitychange", () => { if (document.hidden) dejarDeVigilar(); else if (siguiendo) afinarUbicacion(); });
 const CAJA_RUTAS = L.latLngBounds(lineas.flatMap(l => l.tramos.flatMap(t => t.pts)));
 const enCamiri = p => CAJA_RUTAS.pad(.6).contains(p);
 
@@ -1543,6 +1630,7 @@ function dibujarViaje(op) {
     html: '<svg class="bandera" viewBox="0 0 24 24"><path d="M12 22s7.500-6.500 7.500-12.500a7.500 7.500 0 0 0-15 0C4.500 15.500 12 22 12 22z" fill="#e5484d" stroke="#fff" stroke-width="1.600"/><circle cx="12" cy="9.500" r="2.800" fill="#fff"/></svg>' }) }).addTo(capaViaje);
 }
 function quitarViaje() {
+  document.body.classList.remove("ver-desde");
   viaje.opcion = null;
   viaje.opciones = [];
   viaje.hasta = null;
@@ -1599,14 +1687,23 @@ $("b-invertir").addEventListener("click", () => {
   if (viaje.desde && viaje.hasta) calcularViaje(); else pintarSugerencias();
 });
 $("e-cancelar").addEventListener("click", () => cerrarElegir(false));
+$("b-desde-mini").addEventListener("click", () => { document.body.classList.add("ver-desde"); $("desde").focus(); });
+// Centrar: lleva el mapa a donde estoy y lo sigue mientras camino; si muevo el mapa con el dedo, deja de seguir.
 $("b-centrar").addEventListener("click", () => {
+  activarBrujula();
   $("b-centrar").classList.add("activo");
   pedirUbicacion().then(q => {
     ponerMiPunto(q);
-    if (!enCamiri(q)) { avisar("Usted está lejos de Camiri."); return; }
+    if (!enCamiri(q)) { dejarDeSeguir(); avisar("Usted está lejos de Camiri."); return; }
+    volando = true;
+    mapa.once("moveend", () => { volando = false; siguiendo = !eligiendo; });   // se empieza a seguir cuando termina de acercarse
     mapa.flyTo(q, Math.max(mapa.getZoom(), 16), { duration: calmo ? 0 : .6 });
-  }).catch(e => { $("b-centrar").classList.remove("activo"); avisar(e); });
+    afinarUbicacion();
+  }).catch(e => { dejarDeSeguir(); avisar(e); });
 });
+mapa.on("dragstart", dejarDeSeguir);
+$("b-vista").addEventListener("click", () => ponerVista(!document.body.classList.contains("satelite")));
+try { if (localStorage.getItem(VISTA) === "satelite" && navigator.onLine) ponerVista(true, false); } catch (e) { /* modo privado */ }
 $("e-listo").addEventListener("click", () => cerrarElegir(true));
 
 // ----------------------------------------------------------------- botones
@@ -1628,6 +1725,7 @@ $("b-capa").addEventListener("click", () => {
   (aSatelite ? satelite : calles).addTo(mapa);
 });
 $("b-ubicacion").addEventListener("click", () => {
+  activarBrujula();
   avisar("Buscando su ubicación...");
   pedirUbicacion().then(p => {
     ponerMiPunto(p);
@@ -1687,6 +1785,34 @@ $("b-entendido").addEventListener("click", () => {
   $("bienvenida").classList.remove("ver");
   try { localStorage.setItem("micros-guia-vista", "si"); } catch (e) { /* modo privado */ }
 });
+
+// Modo de prueba: abrir la dirección con ?prueba al final. Muestra en pantalla qué tan fluida va la app en ESTE teléfono.
+if (/[?&]prueba/.test(location.search)) {
+  const caja = document.createElement("div");
+  caja.className = "prueba";
+  document.body.appendChild(caja);
+  let accion = "inicio", cuadros = 0, peor = 0, antes = performance.now(), largas = [], registro = [];
+  const marcar = a => () => { accion = a; };
+  $("mapa").addEventListener("pointerdown", marcar("mover mapa"), { passive: true });
+  $("hoja").addEventListener("pointerdown", marcar("panel"), { passive: true });
+  document.addEventListener("input", marcar("escribir"), { passive: true });
+  mapa.on("zoomstart", marcar("zoom"));
+  (function f(t) { const d = t - antes; antes = t; cuadros++; if (d > peor) peor = d; if (d > 250) registro.unshift(`cuadro ${Math.round(d)} ms (${accion})`); requestAnimationFrame(f); })(performance.now());
+  try {
+    new PerformanceObserver(l => l.getEntries().forEach(e => { largas.push([performance.now(), e.duration]); if (e.duration > 150) registro.unshift(`traba ${Math.round(e.duration)} ms (${accion})`); }))
+      .observe({ type: "longtask", buffered: true });
+  } catch (e) { /* el navegador no informa */ }
+  setInterval(() => {
+    const ahora = performance.now();
+    largas = largas.filter(x => ahora - x[0] < 10000);
+    const mem = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) + " MB" : "?";
+    caja.textContent = `v15 · ${cuadros} cuadros/s · peor ${Math.round(peor)} ms\ntrabas 10 s: ${largas.length} (${Math.round(largas.reduce((a, x) => a + x[1], 0))} ms)\n` +
+      `memoria ${mem} · equipo ${navigator.deviceMemory || "?"} GB · ${navigator.hardwareConcurrency || "?"} núcleos · pantalla x${devicePixelRatio}\n` +
+      `imágenes del mapa: ${document.querySelectorAll(".leaflet-tile").length} · nombres: ${document.querySelectorAll(".rb").length}\n` + registro.slice(0, 4).join("\n");
+    cuadros = 0; peor = 0;
+    registro = registro.slice(0, 8);
+  }, 1000);
+}
 
 // Aplicación instalable y con memoria: solo funciona cuando la página está publicada en un sitio seguro (https).
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
