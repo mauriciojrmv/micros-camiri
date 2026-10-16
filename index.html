@@ -37,9 +37,9 @@
   body[data-tema="oscuro"] #mapa { background: #10161d; }
   /* mapa propio: calles, ríos y nombres dibujados con datos de OpenStreetMap, sin pedir nada a otro servidor */
   .leaflet-base-pane, .leaflet-rotulos-pane { pointer-events: none; }
-  body[data-tema="oscuro"] .leaflet-base-pane, body[data-tema="oscuro"] .leaflet-rotulos-pane { filter: invert(1) hue-rotate(185deg) saturate(.6) brightness(.86); }
-  .rb { position: absolute; left: 0; top: 0; white-space: nowrap; font-weight: 700; color: #5b6470; font-size: 11px; letter-spacing: .01em;
-        text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff, 0 0 2px #fff; }
+  .rb { position: absolute; left: 0; top: 0; white-space: nowrap; font-weight: 700; color: #5b6470; font-size: 11px; letter-spacing: .01em; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
+  body[data-tema="oscuro"] .rb { color: #b7c3cf; text-shadow: 0 0 2px #10161d, 0 0 2px #10161d; }
+  body[data-tema="oscuro"] .rb.lugar { color: #dfe6ee; }
   .rb.lugar { font-size: 12.5px; font-weight: 800; color: #3d4652; letter-spacing: .03em; }
   .rb.ciudad { font-size: 16px; font-weight: 800; color: #1d2733; }
   .rb.poi { font-size: 11px; color: #9a5b1e; }
@@ -48,7 +48,7 @@
   body[data-tema="oscuro"]:not(.satelite) .leaflet-tile-pane { filter: invert(1) hue-rotate(185deg) saturate(.5) brightness(.82); }
   body.satelite .leaflet-tile-pane { filter: brightness(.88); }
   .leaflet-control-attribution { font-size: 9px; background: rgba(255, 255, 255, .65) !important; border-radius: 6px 0 0 0; }
-  .ruta { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .35)); }
+  .ruta { }
   .pin { display: grid; place-items: center; width: max-content; transform: translate(-50%, -50%); min-width: 28px; height: 28px; padding: 0 9px; border-radius: 14px;
          color: #fff; font-weight: 800; font-size: 12.5px; background: var(--c); border: 2.5px solid #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, .35); white-space: nowrap; }
   .yo { width: 18px; height: 18px; border-radius: 50%; background: #1a73e8; border: 3px solid #fff; box-shadow: 0 0 0 7px rgba(26, 115, 232, .22); }
@@ -65,7 +65,7 @@
   #b-instalar svg { width: 16px; height: 16px; }
 
   /* ---------------------------------------------------------- botones flotantes */
-  .fabs { position: fixed; z-index: 450; right: 12px; bottom: calc(var(--h) + var(--nav) + 14px); display: flex; flex-direction: row; gap: 8px; transition: bottom .34s cubic-bezier(.2, .8, .2, 1), opacity .25s ease; }
+  .fabs { position: fixed; z-index: 450; right: 12px; bottom: calc(var(--nav) + 14px); display: flex; flex-direction: row; gap: 8px; will-change: transform; transition: transform .34s cubic-bezier(.2, .8, .2, 1), opacity .25s ease; }
   body.arrastrando .fabs { transition: none; }
   body.hoja-llena .fabs { opacity: 0; pointer-events: none; }
   #b-capa { display: none !important; }
@@ -76,8 +76,10 @@
   body[data-tema="oscuro"] .fab.activo { background: var(--oro); color: #1c1400; }
 
   /* ------------------------------------------------------------------ hoja */
-  .hoja { position: fixed; z-index: 600; left: 0; right: 0; bottom: var(--nav); height: var(--h); background: var(--panel); border-radius: 24px 24px 0 0; box-shadow: var(--sombra);
-          display: flex; flex-direction: column; transition: height .34s cubic-bezier(.2, .8, .2, 1), background .3s ease; will-change: height; }
+  .hoja { position: fixed; z-index: 600; left: 0; right: 0; bottom: var(--nav); height: var(--hmax, 46vh); transform: translateY(var(--baja, 0px)); background: var(--panel); border-radius: 24px 24px 0 0; box-shadow: var(--sombra);
+          display: flex; flex-direction: column; transition: transform .34s cubic-bezier(.2, .8, .2, 1); will-change: transform; }
+  body.escribiendo .nav, body.escribiendo .fabs { display: none; }
+  body.escribiendo .hoja { transition: none; }
   body.arrastrando .hoja { transition: none; }
   .agarre { flex: none; padding: 9px 0 3px; display: grid; place-items: center; touch-action: none; cursor: grab; }
   .agarre i { width: 44px; height: 5px; border-radius: 5px; background: var(--raya); box-shadow: inset 0 0 0 5px rgba(120, 135, 150, .35); }
@@ -91,7 +93,7 @@
   .buscar input { width: 100%; height: 50px; border-radius: 15px; border: 1px solid transparent; background: var(--fondo); padding: 0 14px 0 42px; font-size: 16px; font-weight: 600; outline: none; }
   .buscar input:focus { border-color: var(--oro); }
   .buscar input::placeholder { color: var(--suave); font-weight: 500; }
-  .cuerpo { flex: 1; min-height: 0; overflow-y: auto; padding: 0 10px calc(14px + var(--abajo)); -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: thin; }
+  .cuerpo { flex: 1; min-height: 0; overflow-y: auto; padding: 0 10px calc(14px + var(--abajo) + var(--oculto, 0px)); -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: thin; }
 
   .linea { position: relative; display: grid; grid-template-columns: 46px 1fr auto 16px; gap: 12px; align-items: center; width: 100%; text-align: left; padding: 10px 8px; border-radius: 16px;
            transition: background .15s ease, transform .15s ease; animation: sube .45s cubic-bezier(.2, .8, .2, 1) backwards; }
@@ -164,8 +166,9 @@
   body:not(.con-destino) #c-hasta i.b { display: none; }
   .lupa { display: none; position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: var(--suave); pointer-events: none; }
   body:not(.con-destino) .lupa { display: block; }
-  .cats { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 6px 6px; }
-  .cat { height: 38px; padding: 0 14px; border-radius: 19px; background: var(--fondo); font-weight: 800; font-size: 14px; display: inline-flex; align-items: center; gap: 7px; }
+  .cats { display: flex; gap: 8px; margin: 2px -10px 6px; padding: 2px 16px 4px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .cats::-webkit-scrollbar { display: none; }
+  .cat { flex: none; height: 38px; padding: 0 14px; border-radius: 19px; background: var(--fondo); font-weight: 800; font-size: 14px; display: inline-flex; align-items: center; gap: 7px; }
   .cat:active { transform: scale(.97); }
   .cat svg { width: 17px; height: 17px; color: var(--suave); }
   .cat.volver-cats { background: transparent; border: 1px solid var(--raya); }
@@ -194,6 +197,7 @@
   .campo input { width: 100%; height: 50px; border-radius: 15px; border: 1px solid transparent; background: var(--fondo); padding: 0 40px 0 40px; font-size: 16px; font-weight: 700; outline: none;
                  text-overflow: ellipsis; }
   .campo input:focus { border-color: var(--oro); }
+  input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
   .campo input::placeholder { color: var(--suave); font-weight: 500; }
   .campo input.gps { color: #1a73e8; }
   .campo .limpiar { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; display: none; place-items: center; color: var(--suave); }
@@ -305,12 +309,13 @@
 
   /* ------------------------- pantallas anchas y celular acostado: panel lateral */
   @media (min-width: 760px), (orientation: landscape) and (min-width: 600px) {
-    .hoja { left: 14px; right: auto; top: calc(var(--barra) + var(--arriba) + 14px); bottom: calc(14px + 64px); width: min(400px, 46vw); height: auto; border-radius: 22px 22px 0 0;
+    .hoja { left: 14px; right: auto; top: calc(var(--barra) + var(--arriba) + 14px); bottom: calc(14px + 64px) !important; width: min(400px, 46vw); height: auto !important;
+            transform: none !important; --oculto: 0px; border-radius: 22px 22px 0 0;
             box-shadow: 0 22px 54px -12px rgba(10, 25, 45, .34); }
     .nav { left: 14px; right: auto; bottom: 14px; width: min(400px, 46vw); height: 64px; padding-bottom: 6px; border-radius: 0 0 22px 22px; box-shadow: 0 22px 54px -12px rgba(10, 25, 45, .34); }
     .agarre { display: none; }
     .cab, .f-cab { padding-top: 16px; touch-action: auto; }
-    .fabs { bottom: 26px; right: 14px; }
+    .fabs { bottom: 26px; right: 14px; transform: none !important; }
     body.hoja-llena .fabs { opacity: 1; pointer-events: auto; }
   }
   @media (max-height: 460px) { :root { --barra: 50px; } .barra img { width: 34px; height: 34px; } .cifras b { font-size: 21px; } .linea { padding: 7px 8px; } .chip { width: 40px; height: 40px; font-size: 16px; } .linea { grid-template-columns: 40px 1fr auto 16px; } }
@@ -464,7 +469,7 @@ ponerTema();
 oscuro.addEventListener("change", ponerTema);
 
 // ------------------------------------------------------------------- mapa
-const mapa = L.map("mapa", { zoomControl: false }).setView(CAMIRI, 14);
+const mapa = L.map("mapa", { zoomControl: false, renderer: L.svg({ padding: .5 }) }).setView(CAMIRI, 14);   // las rutas se dibujan de más alrededor, para que no se corten al mover
 const calles = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Mapa &copy; Esri" });
 const satelite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, maxNativeZoom: 17, attribution: "Imágenes &copy; Esri" });
 // ------------------------------------------------------------ mapa propio (sin depender de otro servidor)
@@ -473,29 +478,40 @@ const BASE = window.MAPA_BASE || null;
 mapa.createPane("base").style.zIndex = 250;
 mapa.createPane("rotulos").style.zIndex = 260;
 const capaBase = L.layerGroup([], { attribution: "&copy; colaboradores de OpenStreetMap" }), capaRotulos = L.layerGroup(), trazosBase = [];
-if (BASE) {
-  const lienzo = L.canvas({ pane: "base", padding: .4 });
-  const dibujo = { renderer: lienzo, interactive: false, lineCap: "round", lineJoin: "round" };
-  const trazo = (lista, estilo, ancho) => { if (lista.length) { const c = L.polyline(lista, { ...dibujo, ...estilo }).addTo(capaBase); trazosBase.push([c, ancho]); } };
+// Colores del mapa propio: claro u oscuro según el teléfono, dibujados directamente (un filtro sobre todo el mapa traba los celulares).
+const COLORES = {
+  claro: { verde: "#dbe8c8", agua: "#bfdcf0", rio: "#a9d0ec", arroyo: "#b9d9ee", servicio: "#e4dccd", borde0: "#d8a65a", borde: "#cfc6b4", calle: "#ffffff", avenida: "#ffffff", ruta: "#f8d99c" },
+  oscuro: { verde: "#1c2a22", agua: "#1a3144", rio: "#23415a", arroyo: "#21374a", servicio: "#212932", borde0: "#6b5326", borde: "#2a323b", calle: "#38424e", avenida: "#45505d", ruta: "#8a6a33" },
+};
+const lienzo = L.canvas({ pane: "base", padding: .4 });
+function dibujarBase() {
+  if (!BASE) return;
+  capaBase.clearLayers();
+  trazosBase.length = 0;
+  const k = COLORES[document.body.dataset.tema === "oscuro" ? "oscuro" : "claro"];
+  const dibujo = { renderer: lienzo, interactive: false, lineCap: "round", lineJoin: "round", smoothFactor: 1.5 };
+  const trazo = (lista, color, ancho) => { if (lista.length) { const c = L.polyline(lista, { ...dibujo, color }).addTo(capaBase); trazosBase.push([c, ancho]); } };
   const area = (lista, color) => { if (lista.length) L.polygon(lista, { ...dibujo, stroke: false, fillColor: color, fillOpacity: 1 }).addTo(capaBase); };
-  area(BASE.verdes.map(v => [v.p]), "#dbe8c8");
-  area(BASE.agua.filter(a => a.a).map(a => [a.p]), "#bfdcf0");
-  trazo(BASE.agua.filter(a => !a.a && /r[ií]o/i.test(a.n)).map(a => a.p), { color: "#a9d0ec" }, 7);
-  trazo(BASE.agua.filter(a => !a.a && !/r[ií]o/i.test(a.n)).map(a => a.p), { color: "#b9d9ee" }, 2.2);
+  area(BASE.verdes.map(v => [v.p]), k.verde);
+  area(BASE.agua.filter(a => a.a).map(a => [a.p]), k.agua);
+  trazo(BASE.agua.filter(a => !a.a && /r[ií]o/i.test(a.n)).map(a => a.p), k.rio, 7);
+  trazo(BASE.agua.filter(a => !a.a && !/r[ií]o/i.test(a.n)).map(a => a.p), k.arroyo, 2.2);
   const deClase = c => BASE.vias.filter(v => v.c === c).map(v => v.p);
-  trazo(deClase(3), { color: "#e4dccd" }, 1.6);
-  for (const c of [2, 1, 0]) trazo(deClase(c), { color: c === 0 ? "#d8a65a" : "#cfc6b4" }, [7.5, 6, 4.6][c]);
-  trazo(deClase(2), { color: "#ffffff" }, 3.2);
-  trazo(deClase(1), { color: "#ffffff" }, 4.6);
-  trazo(deClase(0), { color: "#f8d99c" }, 6);
-  capaBase.addTo(mapa);
-  capaRotulos.addTo(mapa);
-} else calles.addTo(mapa);
+  trazo(deClase(3), k.servicio, 1.6);
+  for (const c of [2, 1, 0]) trazo(deClase(c), c === 0 ? k.borde0 : k.borde, [7.5, 6, 4.6][c]);
+  trazo(deClase(2), k.calle, 3.2);
+  trazo(deClase(1), k.avenida, 4.6);
+  trazo(deClase(0), k.ruta, 6);
+  if (typeof grosorBase === "function") grosorBase();
+}
+if (BASE) { dibujarBase(); capaBase.addTo(mapa); capaRotulos.addTo(mapa); oscuro.addEventListener("change", () => setTimeout(dibujarBase, 0)); }
+else calles.addTo(mapa);
 function grosorBase() {
   const z = mapa.getZoom(), f = z <= 12 ? .3 : z <= 13 ? .45 : z <= 14 ? .65 : z <= 15 ? 1 : z <= 16 ? 1.7 : z <= 17 ? 2.8 : 4.2;
   for (const [c, ancho] of trazosBase) c.setStyle({ weight: Math.max(.6, ancho * f) });
 }
 // Nombres de calles y lugares: solo los que entran sin encimarse en lo que se ve.
+const MAX_ROTULOS = 28;
 function rotulosBase() {
   capaRotulos.clearLayers();
   if (!BASE) return;
@@ -515,7 +531,7 @@ function rotulosBase() {
   for (const l of BASE.lugares) {
     if (l.t === "city" || l.t === "town") continue;              // el nombre de la ciudad ya está arriba, en el encabezado
     const desde = l.t === "poi" ? 16 : 14, px = l.t === "poi" ? 6.4 : 8;
-    if (z < desde || !vista.contains(l.p)) continue;
+    if (z < desde || !vista.contains(l.p) || puestos.length >= MAX_ROTULOS) continue;
     const pt = mapa.latLngToContainerPoint(l.p);
     if (!libre(pt, l.n, px)) continue;
     ocupar(pt, l.n, px);
@@ -524,6 +540,7 @@ function rotulosBase() {
   if (z < 15) return;
   const candidatas = BASE.vias.filter(v => v.n && v.c < 3 && (z >= 16 || v.c < 2)).concat(BASE.agua.filter(a => a.n && !a.a).map(a => ({ ...a, c: 9 })));
   for (const v of candidatas) {
+    if (puestos.length >= MAX_ROTULOS) break;                 // pocos nombres: se leen mejor y la pantalla no se traba
     const k = Math.floor(v.p.length / 2), q = v.p[k];
     if (!vista.contains(q)) continue;
     const pt = mapa.latLngToContainerPoint(q), a = mapa.latLngToContainerPoint(v.p[Math.max(0, k - 1)]), b = mapa.latLngToContainerPoint(v.p[Math.min(v.p.length - 1, k + 1)]);
@@ -629,15 +646,49 @@ function encuadrar(pts, animado = true) {
 
 // --------------------------------------------- la hoja: se arrastra y se queda en tres alturas
 const altoNav = () => lateral.matches ? 0 : ($("nav") ? $("nav").offsetHeight : 64);
-const paradas = () => [150, Math.round((window.innerHeight - altoNav()) * .5), window.innerHeight - altoNav() - 70];
+// tres alturas: baja (buscador y categorías), media y casi toda la pantalla
+const paradas = () => { const libre = window.innerHeight - altoNav(), media = Math.round(libre * .5); return [Math.min(media, 262), media, libre - 70]; };
 let alturaPx = 0;
 const alturaActual = () => lateral.matches ? 0 : alturaPx;
+// El panel siempre mide lo máximo y se desliza hacia abajo: mover algo es mucho más liviano que cambiarle el alto.
+let relojOculto = null;
 function ponerAltura(px, sinMover = false) {
-  const p = paradas();
+  if (document.body.classList.contains("escribiendo")) return;
+  const p = paradas(), hoja = $("hoja");
   alturaPx = Math.max(p[0], Math.min(p[2], px));
-  document.documentElement.style.setProperty("--h", alturaPx + "px");
+  hoja.style.setProperty("--hmax", p[2] + "px");
+  hoja.style.setProperty("--baja", (p[2] - alturaPx) + "px");
+  document.querySelector(".fabs").style.transform = `translateY(${-alturaPx}px)`;
   document.body.classList.toggle("hoja-llena", alturaPx > p[1] + 60);
-  if (sinMover) document.body.classList.add("arrastrando"); else document.body.classList.remove("arrastrando");
+  if (sinMover) { document.body.classList.add("arrastrando"); return; }
+  document.body.classList.remove("arrastrando");
+  clearTimeout(relojOculto);                // al quedar quieto, la lista deja lugar abajo para poder verla entera
+  relojOculto = setTimeout(() => hoja.style.setProperty("--oculto", (p[2] - alturaPx) + "px"), 360);
+}
+const alturaInicio = () => paradas()[0];                     // al abrir: el buscador y las categorías, con el mapa a la vista
+// Mientras se escribe, el panel queda justo encima del teclado y deja ver parte del mapa.
+const vv = window.visualViewport;
+function modoEscribir(si) {
+  if (lateral.matches) return;
+  const hoja = $("hoja");
+  if (si) { document.body.classList.add("escribiendo"); ajustarTeclado(); return; }
+  if (!document.body.classList.contains("escribiendo")) return;
+  document.body.classList.remove("escribiendo");
+  hoja.style.bottom = "";
+  ponerAltura(pestana === "ir" && !viaje.opcion && !viaje.hasta ? alturaInicio() : paradas()[1]);
+}
+function ajustarTeclado() {
+  if (!document.body.classList.contains("escribiendo")) return;
+  const hoja = $("hoja"), alto = vv ? vv.height : window.innerHeight, teclado = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+  alturaPx = Math.round(alto * .64);
+  hoja.style.bottom = teclado + "px";
+  hoja.style.setProperty("--hmax", alturaPx + "px");
+  hoja.style.setProperty("--baja", "0px");
+  hoja.style.setProperty("--oculto", "0px");
+}
+if (vv) vv.addEventListener("resize", ajustarTeclado);
+function alSalirDeCampo() {
+  setTimeout(() => { if (!document.activeElement || !document.activeElement.matches("#desde, #hasta, #buscar")) modoEscribir(false); }, 320);
 }
 function alturaCercana(px) { return paradas().reduce((a, b) => Math.abs(b - px) < Math.abs(a - px) ? b : a); }
 let arrastre = null;
@@ -659,8 +710,7 @@ function alSoltar(e) {
   else if (Math.abs(d) > 60) destino = d > 0 ? p.find(x => x > arrastre.h + 10) || p[2] : [...p].reverse().find(x => x < arrastre.h - 10) || p[0];
   else destino = alturaCercana(alturaPx);
   arrastre = null;
-  ponerAltura(destino);
-  setTimeout(reencuadrar, 360);
+  ponerAltura(destino);                      // el mapa se queda donde la persona lo dejó
 }
 document.querySelectorAll(".arrastre").forEach(z => z.addEventListener("pointerdown", alTocar));
 window.addEventListener("pointermove", alMover);
@@ -881,7 +931,7 @@ function avisar(texto) {
 // Dónde estoy (punto azul), compartido por las dos pestañas.
 function ponerMiPunto(p) {
   miPunto = p;
-  if (marcaYo) marcaYo.remove();
+  if (marcaYo) { marcaYo.setLatLng(p); return; }
   marcaYo = L.marker(p, { interactive: false, keyboard: false, icon: L.divIcon({ className: "", html: '<div class="yo"></div>', iconSize: [18, 18] }) }).addTo(mapa);
 }
 const LUG = window.LUGARES_CAMIRI || { lugares: [], calles: { nombres: [], pts: [] } };
@@ -1023,6 +1073,7 @@ function ponerPunto(campo, x) {
   viaje[campo] = x;
   if (campo === "hasta") guardarReciente(x);
   document.activeElement && document.activeElement.blur();
+  modoEscribir(false);
   pintarCampos();
   if (!viaje.hasta) { viaje.campo = "hasta"; $("hasta").focus(); pintarSugerencias(); return; }
   if (!viaje.desde) { viaje.campo = "desde"; $("desde").focus(); pintarSugerencias(); return; }
@@ -1054,13 +1105,29 @@ function cerrarElegir(listo) {
 }
 
 // ---- mi ubicación
+// Primero una posición aproximada (llega en uno o dos segundos); después el GPS la afina solo, sin hacer esperar.
+let ultimaUbic = null, vigilando = null, pidiendo = null;
 function pedirUbicacion() {
-  return new Promise((listo, falla) => {
+  if (ultimaUbic && Date.now() - ultimaUbic.t < 120000) return Promise.resolve(ultimaUbic.p);
+  if (pidiendo) return pidiendo;
+  pidiendo = new Promise((listo, falla) => {
     if (!navigator.geolocation) return falla("Este teléfono no permite ver la ubicación.");
-    navigator.geolocation.getCurrentPosition(pos => listo([pos.coords.latitude, pos.coords.longitude]),
-      () => falla("No se pudo obtener su ubicación. Revise que esté activada y permitida, o marque en el mapa desde dónde sale."),
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
-  });
+    navigator.geolocation.getCurrentPosition(pos => {
+      ultimaUbic = { p: [pos.coords.latitude, pos.coords.longitude], t: Date.now() };
+      listo(ultimaUbic.p);
+      afinarUbicacion();
+    }, () => falla("No se pudo obtener su ubicación. Revise que esté activada y permitida, o marque en el mapa desde dónde sale."),
+    { enableHighAccuracy: false, timeout: 9000, maximumAge: 300000 });
+  }).finally(() => { pidiendo = null; });
+  return pidiendo;
+}
+function afinarUbicacion() {
+  if (vigilando !== null || !navigator.geolocation) return;
+  vigilando = navigator.geolocation.watchPosition(pos => {
+    ultimaUbic = { p: [pos.coords.latitude, pos.coords.longitude], t: Date.now() };
+    if (marcaYo) marcaYo.setLatLng(ultimaUbic.p);
+  }, () => {}, { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 });
+  setTimeout(() => { navigator.geolocation.clearWatch(vigilando); vigilando = null; }, 120000);   // dos minutos y se apaga, para cuidar la batería
 }
 const CAJA_RUTAS = L.latLngBounds(lineas.flatMap(l => l.tramos.flatMap(t => t.pts)));
 const enCamiri = p => CAJA_RUTAS.pad(.6).contains(p);
@@ -1346,6 +1413,7 @@ function quitarViaje() {
   dibujarViaje(null);
   atenuarLineas(false);
   pintarSugerencias();
+  if (!lateral.matches) ponerAltura(alturaInicio());
 }
 
 // ================================================================ pestañas
@@ -1364,12 +1432,14 @@ function irPestana(p, desdeHistorial = false) {
     elegir(seleccion, true);
   }
   if (!desdeHistorial && antes !== p) history.pushState({ pestana: p }, "", p === "lineas" && seleccion ? location.hash : location.pathname + location.search);
-  if (!lateral.matches) ponerAltura(paradas()[1]);
+  if (!lateral.matches) ponerAltura(p === "ir" && !viaje.opcion ? alturaInicio() : paradas()[1]);
   setTimeout(() => reencuadrar(), 80);
 }
 document.querySelectorAll("#nav button").forEach(b => b.addEventListener("click", () => irPestana(b.dataset.p)));
 for (const c of ["desde", "hasta"]) {
-  $(c).addEventListener("focus", () => { viaje.campo = c; categoria = null; $(c).select(); if (!lateral.matches) ponerAltura(paradas()[2]); pintarSugerencias(); });
+  $(c).addEventListener("focus", () => { viaje.campo = c; categoria = null; $(c).select(); modoEscribir(true); pintarSugerencias();
+    if (c === "hasta" && viaje.desde && viaje.desde.gps) pedirUbicacion().catch(() => {}); });   // la ubicación se busca mientras la persona escribe
+  $(c).addEventListener("blur", alSalirDeCampo);
   $(c).addEventListener("input", () => { viaje.campo = c; $("c-" + c).classList.toggle("lleno", !!$(c).value); pintarSugerencias(); });
   $(c).addEventListener("keydown", e => { if (e.key === "Enter") { const r = buscarLugares($(c).value); if (r[0]) ponerPunto(c, { n: r[0].n, sub: r[0].sub, p: r[0].p }); } });
 }
@@ -1402,7 +1472,8 @@ $("visor").addEventListener("click", e => { if (e.target.id === "visor") cerrarV
 document.addEventListener("keydown", e => { if (visor && e.key === "Escape") cerrarVisor(); });
 $("b-red").addEventListener("click", () => elegir(null));
 $("buscar").addEventListener("input", pintarLista);
-$("buscar").addEventListener("focus", () => { if (!lateral.matches) ponerAltura(paradas()[2]); });
+$("buscar").addEventListener("focus", () => modoEscribir(true));
+$("buscar").addEventListener("blur", alSalirDeCampo);
 $("b-capa").addEventListener("click", () => {
   const aSatelite = !document.body.classList.contains("satelite");
   document.body.classList.toggle("satelite", aSatelite);
@@ -1411,16 +1482,15 @@ $("b-capa").addEventListener("click", () => {
   (aSatelite ? satelite : calles).addTo(mapa);
 });
 $("b-ubicacion").addEventListener("click", () => {
-  if (!navigator.geolocation) { avisar("Este dispositivo no permite ver la ubicación."); return; }
   avisar("Buscando su ubicación...");
-  navigator.geolocation.getCurrentPosition(pos => {
-    ponerMiPunto([pos.coords.latitude, pos.coords.longitude]);
+  pedirUbicacion().then(p => {
+    ponerMiPunto(p);
     $("b-ubicacion").classList.add("activo");
     pintarLista();
     const cerca = lineas.map(l => ({ l, d: metrosA(l) })).sort((a, b) => a.d - b.d)[0];
     if (cerca && cerca.d < 5000) { avisar(`La más cercana: ${cerca.l.titulo}, a ${num(cerca.d, 0)} m.`); mapa.flyTo(miPunto, 16, { duration: calmo ? 0 : .8 }); }
     else avisar("Usted está lejos de las rutas de micros de Camiri.");
-  }, () => avisar("No se pudo obtener su ubicación. Revise que esté activada y permitida."), { enableHighAccuracy: true, timeout: 12000 });
+  }).catch(e => avisar(e));
 });
 
 // instalar como aplicación (aparece solo cuando el navegador lo permite)
@@ -1442,16 +1512,23 @@ $("i-instalar").addEventListener("click", async () => { cerrarInstalar(); if (of
 $("b-instalar").addEventListener("click", async () => { if (ofertaInstalar) { ofertaInstalar.prompt(); await ofertaInstalar.userChoice; ofertaInstalar = null; $("b-instalar").style.display = "none"; } });
 window.addEventListener("appinstalled", () => { cerrarInstalar(); avisar("Aplicación instalada."); });
 
-let relojTamano = null;
+// La pantalla cambia de tamaño a menudo (la barra del navegador se esconde, aparece el teclado): solo se reacomoda,
+// sin mover el mapa. Se reencuadra únicamente si el teléfono se gira.
+let relojTamano = null, anchoAntes = window.innerWidth;
 function alCambiarTamano() {
   clearTimeout(relojTamano);
-  relojTamano = setTimeout(() => { mapa.invalidateSize(); if (!lateral.matches) ponerAltura(alturaCercana(alturaPx)); reencuadrar(false); }, 180);
+  relojTamano = setTimeout(() => {
+    mapa.invalidateSize({ pan: false });
+    if (document.body.classList.contains("escribiendo")) return ajustarTeclado();
+    if (!lateral.matches) ponerAltura(alturaCercana(alturaPx));
+    if (Math.abs(window.innerWidth - anchoAntes) > 40) { anchoAntes = window.innerWidth; reencuadrar(false); }
+  }, 180);
 }
 window.addEventListener("resize", alCambiarTamano);
 lateral.addEventListener("change", alCambiarTamano);
 
 // ------------------------------------------------------------------ arranque
-ponerAltura(paradas()[1]);
+ponerAltura(alturaInicio());
 pintarLista();
 irPestana(deHash() ? "lineas" : "ir", true);
 if (deHash()) elegir(deHash(), true);
