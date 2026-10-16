@@ -1,5 +1,5 @@
 // Guarda la aplicación y los mapas ya vistos, para que abra aunque la señal sea mala.
-const VERSION = "micros-camiri-v13";
+const VERSION = "micros-camiri-v14";
 const BASE = ["./", "index.html", "rutas_datos.js", "lugares.js", "mapa_base.js", "manifest.webmanifest", "icono-192.png", "icono-512.png",
   "lib/leaflet.min.js"];
 

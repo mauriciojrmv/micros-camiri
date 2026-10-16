@@ -34,12 +34,11 @@
 
   /* ------------------------------------------------------------------ mapa */
   #mapa { position: fixed; inset: 0; z-index: 0; background: #f2eee5; }
-  body[data-tema="oscuro"] #mapa { background: #10161d; }
+  /* el mapa queda claro también en modo oscuro: es una imagen, no se le aplican filtros */
   /* mapa propio: calles, ríos y nombres dibujados con datos de OpenStreetMap, sin pedir nada a otro servidor */
   .leaflet-base-pane, .leaflet-rotulos-pane { pointer-events: none; }
   .rb { position: absolute; left: 0; top: 0; white-space: nowrap; font-weight: 700; color: #5b6470; font-size: 11px; letter-spacing: .01em; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
-  body[data-tema="oscuro"] .rb { color: #b7c3cf; text-shadow: 0 0 2px #10161d, 0 0 2px #10161d; }
-  body[data-tema="oscuro"] .rb.lugar { color: #dfe6ee; }
+
   .rb.lugar { font-size: 12.5px; font-weight: 800; color: #3d4652; letter-spacing: .03em; }
   .rb.ciudad { font-size: 16px; font-weight: 800; color: #1d2733; }
   .rb.poi { font-size: 11px; color: #9a5b1e; }
@@ -78,7 +77,17 @@
   /* ------------------------------------------------------------------ hoja */
   .hoja { position: fixed; z-index: 600; left: 0; right: 0; bottom: var(--nav); height: var(--hmax, 46vh); transform: translateY(var(--baja, 0px)); background: var(--panel); border-radius: 24px 24px 0 0; box-shadow: var(--sombra);
           display: flex; flex-direction: column; transition: transform .34s cubic-bezier(.2, .8, .2, 1); will-change: transform; }
-  body.escribiendo .nav, body.escribiendo .fabs { display: none; }
+  body.escribiendo .nav, body.escribiendo .fabs, body.escribiendo .fab-centro { display: none; }
+  /* botón para centrar el mapa en donde estoy */
+  .fab-centro { position: fixed; z-index: 450; right: 12px; bottom: calc(var(--nav) + 14px); width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center;
+                background: var(--panel); color: var(--tinta); box-shadow: 0 6px 18px rgba(10, 25, 45, .24); will-change: transform;
+                transition: transform .34s cubic-bezier(.2, .8, .2, 1), opacity .25s ease; }
+  .fab-centro svg { width: 24px; height: 24px; }
+  .fab-centro.activo { color: #1a73e8; }
+  body[data-pestana="lineas"] .fab-centro { bottom: calc(var(--nav) + 14px + 60px); }
+  body.hoja-llena .fab-centro { opacity: 0; pointer-events: none; }
+  body.arrastrando .fab-centro { transition: none; }
+  body.eligiendo .fab-centro { display: grid; transform: none !important; bottom: calc(190px + var(--abajo)); opacity: 1; pointer-events: auto; }
   body.escribiendo .hoja { transition: none; }
   body.arrastrando .hoja { transition: none; }
   .agarre { flex: none; padding: 9px 0 3px; display: grid; place-items: center; touch-action: none; cursor: grab; }
@@ -316,6 +325,8 @@
     .agarre { display: none; }
     .cab, .f-cab { padding-top: 16px; touch-action: auto; }
     .fabs { bottom: 26px; right: 14px; transform: none !important; }
+    .fab-centro { transform: none !important; bottom: 26px !important; right: 14px; }
+    body[data-pestana="lineas"] .fab-centro { bottom: 86px !important; }
     body.hoja-llena .fabs { opacity: 1; pointer-events: auto; }
   }
   @media (max-height: 460px) { :root { --barra: 50px; } .barra img { width: 34px; height: 34px; } .cifras b { font-size: 21px; } .linea { padding: 7px 8px; } .chip { width: 40px; height: 40px; font-size: 16px; } .linea { grid-template-columns: 40px 1fr auto 16px; } }
@@ -377,6 +388,8 @@
   </div>
 </section>
 
+<button class="fab-centro" id="b-centrar" aria-label="Centrar el mapa en mi ubicación" title="Mi ubicación">
+  <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.500"/><circle cx="12" cy="12" r="2.200" fill="currentColor"/><path d="M12 2.500v3M12 18.500v3M2.500 12h3M18.500 12h3"/></svg></button>
 <nav class="nav" id="nav">
   <button data-p="ir" class="activa"><span><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.500"/><circle cx="18" cy="6" r="2.500"/><path d="M8.500 18H15a3.500 3.500 0 0 0 0-7H9a3.500 3.500 0 0 1 0-7h6.500"/></svg></span>Ir a un lugar</button>
   <button data-p="lineas"><span><svg class="i" viewBox="0 0 24 24"><rect x="5" y="3.500" width="14" height="14" rx="3"/><path d="M5 11h14M8 20.500l1.500-3M16 20.500l-1.500-3"/><circle cx="8.500" cy="14.300" r=".8"/><circle cx="15.500" cy="14.300" r=".8"/></svg></span>Líneas</button>
@@ -469,7 +482,9 @@ ponerTema();
 oscuro.addEventListener("change", ponerTema);
 
 // ------------------------------------------------------------------- mapa
-const mapa = L.map("mapa", { zoomControl: false, renderer: L.svg({ padding: .5 }) }).setView(CAMIRI, 14);   // las rutas se dibujan de más alrededor, para que no se corten al mover
+const CAJA_MAPA = window.MAPA_BASE ? L.latLngBounds([window.MAPA_BASE.caja[0], window.MAPA_BASE.caja[1]], [window.MAPA_BASE.caja[2], window.MAPA_BASE.caja[3]]) : null;
+const mapa = L.map("mapa", { zoomControl: false, renderer: L.svg({ padding: .5 }), minZoom: 13, maxZoom: 19,
+  maxBounds: CAJA_MAPA ? CAJA_MAPA.pad(.15) : null, maxBoundsViscosity: .8 }).setView(CAMIRI, 14);   // las rutas se dibujan de más alrededor, para que no se corten al mover   // las rutas se dibujan de más alrededor, para que no se corten al mover
 const calles = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Mapa &copy; Esri" });
 const satelite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, maxNativeZoom: 17, attribution: "Imágenes &copy; Esri" });
 // ------------------------------------------------------------ mapa propio (sin depender de otro servidor)
@@ -504,14 +519,18 @@ function dibujarBase() {
   trazo(deClase(0), k.ruta, 6);
   if (typeof grosorBase === "function") grosorBase();
 }
-if (BASE) { dibujarBase(); capaBase.addTo(mapa); capaRotulos.addTo(mapa); oscuro.addEventListener("change", () => setTimeout(dibujarBase, 0)); }
-else calles.addTo(mapa);
+// El fondo son imágenes ya dibujadas (carpeta "teselas", hechas con los datos de OpenStreetMap): el celular solo las desplaza.
+if (BASE) {
+  L.tileLayer("teselas/{z}/{x}/{y}.png", { minZoom: 13, maxNativeZoom: 17, maxZoom: 19, bounds: CAJA_MAPA, keepBuffer: 4, updateWhenZooming: false,
+    attribution: "&copy; colaboradores de OpenStreetMap" }).addTo(mapa);
+  capaRotulos.addTo(mapa);
+} else calles.addTo(mapa);
 function grosorBase() {
   const z = mapa.getZoom(), f = z <= 12 ? .3 : z <= 13 ? .45 : z <= 14 ? .65 : z <= 15 ? 1 : z <= 16 ? 1.7 : z <= 17 ? 2.8 : 4.2;
   for (const [c, ancho] of trazosBase) c.setStyle({ weight: Math.max(.6, ancho * f) });
 }
 // Nombres de calles y lugares: solo los que entran sin encimarse en lo que se ve.
-const MAX_ROTULOS = 28;
+const MAX_ROTULOS = 22;
 function rotulosBase() {
   capaRotulos.clearLayers();
   if (!BASE) return;
@@ -589,9 +608,9 @@ for (const l of lineas) { for (const t of l.tramos) t.grabado = t.pts; adaptarRe
 
 // primero todos los bordes claros y después las rutas, para que un borde no tape otra ruta
 for (const l of lineas) for (const t of l.tramos)
-  capas.set(t.nombre, { borde: L.polyline(t.pts, { color: "#fff", weight: 8, opacity: .9, interactive: false, lineCap: "round", lineJoin: "round" }).addTo(capaRutas) });
+  capas.set(t.nombre, { borde: L.polyline(t.pts, { color: "#fff", weight: 8, opacity: .9, interactive: false, smoothFactor: 1.5, lineCap: "round", lineJoin: "round" }).addTo(capaRutas) });
 for (const l of lineas) for (const t of l.tramos) {
-  const linea = L.polyline(t.pts, { color: l.color, weight: 4.5, opacity: .97, className: "ruta", lineCap: "round", lineJoin: "round",
+  const linea = L.polyline(t.pts, { color: l.color, weight: 4.5, opacity: .97, className: "ruta", smoothFactor: 1.5, lineCap: "round", lineJoin: "round",
     dashArray: tramoDe(t.nombre) === "Vuelta" ? "10 9" : null }).addTo(capaRutas);
   linea.on("click", () => elegir(l.nombre));
   capas.get(t.nombre).linea = linea;
@@ -647,7 +666,9 @@ function encuadrar(pts, animado = true) {
 // --------------------------------------------- la hoja: se arrastra y se queda en tres alturas
 const altoNav = () => lateral.matches ? 0 : ($("nav") ? $("nav").offsetHeight : 64);
 // tres alturas: baja (buscador y categorías), media y casi toda la pantalla
-const paradas = () => { const libre = window.innerHeight - altoNav(), media = Math.round(libre * .5); return [Math.min(media, 262), media, libre - 70]; };
+// cuatro alturas: casi oculto (solo la manija y el buscador), baja, media y casi toda la pantalla
+const paradas = () => { const libre = window.innerHeight - altoNav(), media = Math.round(libre * .5); return [96, Math.min(media, 262), media, libre - 70]; };
+const ALTA = () => paradas()[3], MEDIA = () => paradas()[2];
 let alturaPx = 0;
 const alturaActual = () => lateral.matches ? 0 : alturaPx;
 // El panel siempre mide lo máximo y se desliza hacia abajo: mover algo es mucho más liviano que cambiarle el alto.
@@ -655,17 +676,18 @@ let relojOculto = null;
 function ponerAltura(px, sinMover = false) {
   if (document.body.classList.contains("escribiendo")) return;
   const p = paradas(), hoja = $("hoja");
-  alturaPx = Math.max(p[0], Math.min(p[2], px));
-  hoja.style.setProperty("--hmax", p[2] + "px");
-  hoja.style.setProperty("--baja", (p[2] - alturaPx) + "px");
+  alturaPx = Math.max(p[0], Math.min(p[3], px));
+  hoja.style.setProperty("--hmax", p[3] + "px");
+  hoja.style.setProperty("--baja", (p[3] - alturaPx) + "px");
   document.querySelector(".fabs").style.transform = `translateY(${-alturaPx}px)`;
-  document.body.classList.toggle("hoja-llena", alturaPx > p[1] + 60);
+  $("b-centrar").style.transform = `translateY(${-alturaPx}px)`;
+  document.body.classList.toggle("hoja-llena", alturaPx > p[2] + 60);
   if (sinMover) { document.body.classList.add("arrastrando"); return; }
   document.body.classList.remove("arrastrando");
   clearTimeout(relojOculto);                // al quedar quieto, la lista deja lugar abajo para poder verla entera
-  relojOculto = setTimeout(() => hoja.style.setProperty("--oculto", (p[2] - alturaPx) + "px"), 360);
+  relojOculto = setTimeout(() => hoja.style.setProperty("--oculto", (p[3] - alturaPx) + "px"), 360);
 }
-const alturaInicio = () => paradas()[0];                     // al abrir: el buscador y las categorías, con el mapa a la vista
+const alturaInicio = () => paradas()[1];                     // al abrir: el buscador y las categorías, con el mapa a la vista
 // Mientras se escribe, el panel queda justo encima del teclado y deja ver parte del mapa.
 const vv = window.visualViewport;
 function modoEscribir(si) {
@@ -675,7 +697,7 @@ function modoEscribir(si) {
   if (!document.body.classList.contains("escribiendo")) return;
   document.body.classList.remove("escribiendo");
   hoja.style.bottom = "";
-  ponerAltura(pestana === "ir" && !viaje.opcion && !viaje.hasta ? alturaInicio() : paradas()[1]);
+  ponerAltura(pestana === "ir" && !viaje.opcion && !viaje.hasta ? alturaInicio() : MEDIA());
 }
 function ajustarTeclado() {
   if (!document.body.classList.contains("escribiendo")) return;
@@ -706,8 +728,8 @@ function alSoltar(e) {
   if (!arrastre) return;
   const d = arrastre.y - e.clientY, p = paradas();
   let destino;
-  if (!arrastre.movio) destino = e.target.closest("#agarre") ? p[(p.indexOf(alturaCercana(alturaPx)) + 1) % 3] : alturaPx;   // un toque en el asa pasa a la siguiente altura
-  else if (Math.abs(d) > 60) destino = d > 0 ? p.find(x => x > arrastre.h + 10) || p[2] : [...p].reverse().find(x => x < arrastre.h - 10) || p[0];
+  if (!arrastre.movio) destino = e.target.closest("#agarre") ? p[(p.indexOf(alturaCercana(alturaPx)) + 1) % p.length] : alturaPx;   // un toque en el asa pasa a la siguiente altura
+  else if (Math.abs(d) > 60) destino = d > 0 ? p.find(x => x > arrastre.h + 10) || p[p.length - 1] : [...p].reverse().find(x => x < arrastre.h - 10) || p[0];
   else destino = alturaCercana(alturaPx);
   arrastre = null;
   ponerAltura(destino);                      // el mapa se queda donde la persona lo dejó
@@ -864,7 +886,7 @@ function elegir(nombre, desdeHistorial = false) {
     const primero = l.orden[0], fin = primero.pts[primero.pts.length - 1];
     paradasDe(l).forEach((q, i) => pin(q.p, "Parada " + (q.zona || (q.salida ? "de salida" : "de regreso")), l.color, () => abrirVisor(l, i)));
     if (!(l.ida && l.vuelta) && mapa.distance(primero.pts[0], fin) > 150) pin(fin, l.destino || "Fin del recorrido", l.color);
-    if (!lateral.matches) ponerAltura(paradas()[1]);
+    if (!lateral.matches) ponerAltura(MEDIA());
     setTimeout(() => { if (turno === ficha) trazar(l, turno); }, calmo ? 0 : 950);
   } else {
     pinesGenerales();
@@ -1132,6 +1154,95 @@ function afinarUbicacion() {
 const CAJA_RUTAS = L.latLngBounds(lineas.flatMap(l => l.tramos.flatMap(t => t.pts)));
 const enCamiri = p => CAJA_RUTAS.pad(.6).contains(p);
 
+// ================================================================ caminar por las calles
+// La red de calles (mapa_base.js) se arma una sola vez. Para cada caminata se busca el camino más corto por las calles
+// (algoritmo A*), entrando a la calle por su punto más cercano. Si algo falla, se usa la línea recta como antes.
+let red = null;
+function armarRed() {
+  const idx = new Map(), lat = [], lng = [], ady = [], tramos = [];
+  const nodo = q => { const k = q[0].toFixed(5) + "," + q[1].toFixed(5); let i = idx.get(k); if (i === undefined) { i = lat.length; idx.set(k, i); lat.push(q[0]); lng.push(q[1]); ady.push([]); } return i; };
+  for (const v of BASE.vias) {
+    let a = nodo(v.p[0]);
+    for (let k = 1; k < v.p.length; k++) {
+      const b = nodo(v.p[k]);
+      if (b !== a) { const w = metros(v.p[k - 1], v.p[k]); ady[a].push(b, w); ady[b].push(a, w); tramos.push(a, b); }
+      a = b;
+    }
+  }
+  const comp = new Int32Array(lat.length).fill(-1), tam = [];       // grupos de calles conectadas: se usa el principal
+  for (let i = 0; i < lat.length; i++) {
+    if (comp[i] >= 0) continue;
+    const c = tam.length, pila = [i];
+    comp[i] = c; tam.push(0);
+    while (pila.length) { const x = pila.pop(); tam[c]++; const a = ady[x]; for (let k = 0; k < a.length; k += 2) if (comp[a[k]] < 0) { comp[a[k]] = c; pila.push(a[k]); } }
+  }
+  const principal = tam.indexOf(Math.max(...tam)), CEL = .001, grilla = new Map();
+  for (let e = 0; e < tramos.length; e += 2) {
+    const a = tramos[e], b = tramos[e + 1];
+    if (comp[a] !== principal) continue;
+    for (let y = Math.floor(Math.min(lat[a], lat[b]) / CEL); y <= Math.floor(Math.max(lat[a], lat[b]) / CEL); y++)
+      for (let x = Math.floor(Math.min(lng[a], lng[b]) / CEL); x <= Math.floor(Math.max(lng[a], lng[b]) / CEL); x++) {
+        const k = y + ":" + x;
+        if (!grilla.has(k)) grilla.set(k, []);
+        grilla.get(k).push(e);
+      }
+  }
+  red = { lat, lng, ady, tramos, grilla, CEL };
+}
+function proyectar(q) {                    // el punto de calle más cercano a q
+  const { lat, lng, tramos, grilla, CEL } = red, cy = Math.floor(q[0] / CEL), cx = Math.floor(q[1] / CEL);
+  const fx = 111320 * Math.cos(q[0] * Math.PI / 180), fy = 111320;
+  let mejor = null;
+  for (let r = 1; r <= 4 && !mejor; r++) {
+    for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) for (const e of grilla.get(y + ":" + x) || []) {
+      const a = tramos[e], b = tramos[e + 1];
+      const ax = (lng[a] - q[1]) * fx, ay = (lat[a] - q[0]) * fy, bx = (lng[b] - q[1]) * fx, by = (lat[b] - q[0]) * fy;
+      const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+      const t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
+      const px = ax + t * dx, py = ay + t * dy, d = Math.hypot(px, py);
+      if (!mejor || d < mejor.d) mejor = { a, b, t, d, q: [q[0] + py / fy, q[1] + px / fx], la: t * Math.sqrt(l2), lb: (1 - t) * Math.sqrt(l2) };
+    }
+  }
+  return mejor && mejor.d < 400 ? mejor : null;
+}
+function caminoPie(o, d) {
+  const recto = { pts: [o, d], m: metros(o, d) * DESVIO, recto: true };
+  if (!BASE) return recto;
+  if (!red) armarRed();
+  const pa = proyectar(o), pb = proyectar(d);
+  if (!pa || !pb) return recto;
+  const { lat, lng, ady } = red, n = lat.length;
+  const g = new Float64Array(n).fill(Infinity), prev = new Int32Array(n).fill(-1), cerrado = new Uint8Array(n);
+  const h = i => metros([lat[i], lng[i]], pb.q);
+  const montón = [];                       // montículo binario de [f, nodo]
+  const meter = (f, i) => { montón.push([f, i]); let k = montón.length - 1; while (k > 0) { const pk = (k - 1) >> 1; if (montón[pk][0] <= montón[k][0]) break; [montón[pk], montón[k]] = [montón[k], montón[pk]]; k = pk; } };
+  const sacar = () => { const top = montón[0], ult = montón.pop(); if (montón.length) { montón[0] = ult; let k = 0; for (;;) { const l = 2 * k + 1, r = l + 1; let m = k;
+    if (l < montón.length && montón[l][0] < montón[m][0]) m = l; if (r < montón.length && montón[r][0] < montón[m][0]) m = r; if (m === k) break; [montón[m], montón[k]] = [montón[k], montón[m]]; k = m; } } return top; };
+  for (const [i, extra] of [[pa.a, pa.la], [pa.b, pa.lb]]) if (pa.d + extra < g[i]) { g[i] = pa.d + extra; meter(g[i] + h(i), i); }
+  const meta = new Map([[pb.a, pb.la + pb.d], [pb.b, pb.lb + pb.d]]);
+  let mejor = Infinity, fin = -1, pasos = 0;
+  const mismo = (pa.a === pb.a && pa.b === pb.b) || (pa.a === pb.b && pa.b === pb.a);
+  if (mismo) mejor = pa.d + metros(pa.q, pb.q) + pb.d;              // los dos en la misma cuadra
+  while (montón.length && pasos++ < 40000) {
+    const [f, u] = sacar();
+    if (f >= mejor) break;
+    if (cerrado[u]) continue;
+    cerrado[u] = 1;
+    if (meta.has(u) && g[u] + meta.get(u) < mejor) { mejor = g[u] + meta.get(u); fin = u; }
+    const a = ady[u];
+    for (let k = 0; k < a.length; k += 2) {
+      const v = a[k], nv = g[u] + a[k + 1];
+      if (nv < g[v]) { g[v] = nv; prev[v] = u; meter(nv + h(v), v); }
+    }
+  }
+  if (mejor === Infinity) return recto;
+  if (fin < 0) return { pts: [o, pa.q, pb.q, d], m: mejor };
+  const camino = [];
+  for (let i = fin; i >= 0; i = prev[i]) camino.push([lat[i], lng[i]]);
+  camino.reverse();
+  return { pts: [o, pa.q, ...camino, pb.q, d], m: mejor };
+}
+
 // ================================================================ cálculo del viaje
 // Los micros se toman y se dejan en cualquier punto de su recorrido. Para cada línea se busca dónde conviene subir
 // y bajar, respetando el sentido en que va; si hace falta, se combina con una segunda línea.
@@ -1226,7 +1337,7 @@ function planificar(o, d) {
     }
   }
   // se ordena con los minutos reales: caminar pesa más, y subir o cambiar de micro también suma
-  const nota = op => op.total + (PESO_PIE - 1) * minPie(op.caminar) + CASTIGO_SUBIR * op.tramos.length + CASTIGO_CAMBIO * Math.max(0, op.tramos.length - 1);
+  const nota = op => op.total + (PESO_PIE - 1) * op.minCaminar + CASTIGO_SUBIR * op.tramos.length + CASTIGO_CAMBIO * Math.max(0, op.tramos.length - 1);
   const lista = [], vistas = new Set();
   for (const op of unas.map(x => detallar(x, o, d)).sort((a, b) => nota(a) - nota(b))) {
     if (vistas.has(op.tramos[0].s.l)) continue;
@@ -1235,19 +1346,33 @@ function planificar(o, d) {
   }
   const mejorUna = lista.length ? nota(lista[0]) : Infinity;
   const combinadas = [...dos.values()].map(x => detallar(x, o, d)).filter(op => nota(op) < mejorUna - 2).sort((a, b) => nota(a) - nota(b)).slice(0, 2);
-  let opciones = [...lista.slice(0, 3), ...combinadas].sort((a, b) => nota(a) - nota(b)).slice(0, 3);
-  const aPie = detallar({ total: minPie(metros(o, d)), tramos: [], aPie: true }, o, d);
+  let opciones = [...lista.slice(0, 3), ...combinadas].map(afinar).sort((a, b) => nota(a) - nota(b));   // ya con las caminatas reales
+  const mejorTotal = Math.min(...opciones.map(op => op.total));
+  opciones = opciones.filter(op => op.total <= mejorTotal * 1.6 + 5 && op.caminar <= MAX_PIE * 2).slice(0, 3);   // fuera las que, caminando de verdad, quedan muy atrás
+  const aPie = afinar(detallar({ total: minPie(metros(o, d)), tramos: [], aPie: true }, o, d));
   if (aPie.total <= 12) opciones = [aPie, ...opciones.filter(op => op.total < aPie.total - 3)].slice(0, 3);   // cerca: a pie, salvo que el micro ahorre bastante
   else if (opciones.length && aPie.total < Math.min(...opciones.map(op => op.total))) opciones = [...opciones.slice(0, 2), aPie];   // caminando se llega antes
   return opciones;
 }
 function detallar(op, o, d) {
-  if (op.aPie) return Object.assign(op, { caminar: metros(o, d), viajeMin: 0, o, d });
+  if (op.aPie) return Object.assign(op, { caminatas: [metros(o, d) * DESVIO], caminar: metros(o, d) * DESVIO, minCaminar: minPie(metros(o, d)), viajeMin: 0, total: minPie(metros(o, d)), o, d });
   if (op.caminatas) return op;
   const t = op.tramos.map(({ s, b, j }) => ({ s, b, j, subir: s.pts[b], bajar: s.pts[j], m: distViaje(s, b, j), min: distViaje(s, b, j) / s.vel, pts: tramoPts(s, b, j) }));
   const caminatas = [metros(o, t[0].subir), ...t.slice(1).map((x, i) => metros(t[i].bajar, x.subir)), metros(t[t.length - 1].bajar, d)];
-  return Object.assign(op, { tramos: t, caminatas, caminar: caminatas.reduce((a, b) => a + b, 0),
+  return Object.assign(op, { tramos: t, caminatas, caminar: caminatas.reduce((a, b) => a + b, 0), minCaminar: caminatas.reduce((a, m) => a + minPie(m), 0),
     viajeMin: t.reduce((a, x) => a + x.min, 0), total: caminatas.reduce((a, m) => a + minPie(m), 0) + t.reduce((a, x) => a + x.min, 0), o, d });
+}
+// el camino real por las calles, para las pocas opciones que se van a mostrar
+function afinar(op) {
+  if (op.caminos) return op;
+  const pares = op.aPie ? [[op.o, op.d]]
+    : [[op.o, op.tramos[0].subir], ...op.tramos.slice(1).map((x, i) => [op.tramos[i].bajar, x.subir]), [op.tramos[op.tramos.length - 1].bajar, op.d]];
+  op.caminos = pares.map(([a, b]) => caminoPie(a, b));
+  op.caminatas = op.caminos.map(c => c.m);
+  op.caminar = op.caminatas.reduce((a, b) => a + b, 0);
+  op.minCaminar = op.caminar / PIE;
+  op.total = op.minCaminar + op.viajeMin;
+  return op;
 }
 
 // ================================================================ mostrar el viaje
@@ -1296,7 +1421,7 @@ function mostrarOpcion(i) {
     const b = document.createElement("button");
     b.className = "op" + (k === i ? " elegida" : "");
     b.innerHTML = `<span class="op-chips">${chipsDe(op)}</span><span style="min-width:0"><b>${esc(tituloDe(op))}${k === 0 && viaje.opciones.length > 1 ? '<em class="mejor">Recomendada</em>' : ""}</b><small>${
-      op.aPie ? "Caminar " + textoDist(op.caminar) : "Caminar " + textoMin(minPie(op.caminar)) + " · micro " + textoMin(op.viajeMin)}</small></span>
+      op.aPie ? "Caminar " + textoDist(op.caminar) : "Caminar " + textoMin(op.minCaminar) + " · micro " + textoMin(op.viajeMin)}</small></span>
       <span class="op-min tabular">${Math.round(op.total)}<i>min</i></span>`;
     b.addEventListener("click", () => mostrarOpcion(k));
     return b;
@@ -1316,7 +1441,7 @@ function mostrarOpcion(i) {
   }
   pintarPasos(viaje.opcion);
   dibujarViaje(viaje.opcion);
-  if (!lateral.matches) ponerAltura(paradas()[1]);
+  if (!lateral.matches) ponerAltura(MEDIA());
   setTimeout(() => reencuadrar(), 60);
 }
 function paso(icono, clase, titulo, sub, color) {
@@ -1328,18 +1453,30 @@ function paso(icono, clase, titulo, sub, color) {
   d.querySelector("small").textContent = sub || "";
   return d;
 }
+// la calle por la que más se camina en un tramo a pie (para decir "por la Calle X")
+function porCalle(c) {
+  if (!c || c.recto || c.pts.length < 4) return null;
+  const largo = new Map();
+  for (let i = 1; i < c.pts.length; i++) {
+    const n = calleCerca([(c.pts[i - 1][0] + c.pts[i][0]) / 2, (c.pts[i - 1][1] + c.pts[i][1]) / 2], 25);
+    if (n) largo.set(n, (largo.get(n) || 0) + metros(c.pts[i - 1], c.pts[i]));
+  }
+  const mejor = [...largo].sort((a, b) => b[1] - a[1])[0];
+  return mejor && mejor[1] > 60 ? mejor[0] : null;
+}
 function pintarPasos(op) {
   const caja = $("pasos"), hasta = viaje.hasta.n;
   caja.innerHTML = "";
   if (op.aPie) {
-    caja.appendChild(paso(ICONO.pie, "", "Camine " + textoMin(minPie(op.caminar)) + " hasta " + hasta,
+    caja.appendChild(paso(ICONO.pie, "", "Camine " + textoMin(op.minCaminar) + " hasta " + hasta,
       "Son unos " + textoDist(op.caminar) + (op.total <= 12 ? ". Está cerca: no hace falta tomar micro." : ". Caminando llega antes que en micro.")));
     return;
   }
   op.tramos.forEach((t, i) => {
     const m = op.caminatas[i], donde = referencia(t.subir);
-    if (m > 40) caja.appendChild(paso(ICONO.pie, "", "Camine " + textoMin(minPie(m)) + (donde ? " hasta " + donde : ""),
-      i === 0 ? "Son unos " + textoDist(m) + ". Ahí pasa la " + t.s.l.titulo + "." : "Cambie de micro: son unos " + textoDist(m) + "."));
+    const por = porCalle(op.caminos[i]);
+    if (m > 40) caja.appendChild(paso(ICONO.pie, "", "Camine " + textoMin(m / PIE) + (donde ? " hasta " + donde : ""),
+      (por ? "Por " + por + ". " : "") + (i === 0 ? "Son unos " + textoDist(m) + ". Ahí pasa la " + t.s.l.titulo + "." : "Cambie de micro: son unos " + textoDist(m) + ".")));
     const l = t.s.l, sentido = t.s.sentido === "Vuelta" ? "regresa a " + t.s.hacia : t.s.circular ? "da la vuelta por " + t.s.hacia : "va a " + t.s.hacia;
     const pb = paso(esc(l.numero), "bus", (i === 0 ? "Tome la " : "Tome la ") + l.titulo + (m <= 40 && donde ? (donde.startsWith("cerca de") ? " " : " en ") + donde : ""),
       "Es la que " + sentido + ". Viaje unos " + textoMin(t.min) + " (" + textoDist(t.m) + ").", l.color);
@@ -1356,7 +1493,8 @@ function pintarPasos(op) {
       i < op.tramos.length - 1 ? "Ahí cambia a la " + op.tramos[i + 1].s.l.titulo + "." : "", null));
   });
   const ult = op.caminatas[op.caminatas.length - 1];
-  caja.appendChild(paso(ICONO.pin, "fin", "Llega a " + hasta, ult > 40 ? "Camine " + textoMin(minPie(ult)) + " (unos " + textoDist(ult) + ")." : ""));
+  const porFin = porCalle(op.caminos[op.caminos.length - 1]);
+  caja.appendChild(paso(ICONO.pin, "fin", "Llega a " + hasta, ult > 40 ? "Camine " + textoMin(ult / PIE) + " (unos " + textoDist(ult) + ")" + (porFin ? " por " + porFin : "") + "." : ""));
 }
 
 // ---- dibujo en el mapa
@@ -1369,7 +1507,7 @@ function marcaTexto(capa, p, texto, color, abajo) {
   e.textContent = texto;
   e.style.setProperty("--c", color);
 }
-function puntosViaje(op) { return op.aPie ? [op.o, op.d] : [op.o, op.d, ...op.tramos.flatMap(t => t.pts)]; }
+function puntosViaje(op) { return [op.o, op.d, ...(op.caminos || []).flatMap(c => c.pts), ...op.tramos.flatMap(t => t.pts)]; }
 function atenuarLineas(mucho) {
   for (const l of lineas) for (const t of l.tramos) {
     const c = capas.get(t.nombre), el = c.linea.getElement();
@@ -1384,16 +1522,16 @@ function dibujarViaje(op) {
   atenuarLineas(!!op);
   const o = viaje.desde && viaje.desde.p, d = viaje.hasta && viaje.hasta.p;
   if (op) {
-    const pie = (a, b) => L.polyline([a, b], { color: "#4a5b6d", weight: 5, opacity: .9, dashArray: "1 10", lineCap: "round", interactive: false }).addTo(capaViaje);
-    if (op.aPie) pie(op.o, op.d);
+    const pie = c => L.polyline(c.pts, { color: "#4a5b6d", weight: 5, opacity: .9, dashArray: "1 10", lineCap: "round", lineJoin: "round", interactive: false }).addTo(capaViaje);
+    if (op.aPie) pie(op.caminos[0]);
     else {
-      pie(op.o, op.tramos[0].subir);
+      pie(op.caminos[0]);
       op.tramos.forEach((t, i) => {
         L.polyline(t.pts, { color: "#fff", weight: 11, opacity: .95, lineCap: "round", lineJoin: "round", interactive: false }).addTo(capaViaje);
         L.polyline(t.pts, { color: t.s.l.color, weight: 6.5, opacity: 1, lineCap: "round", lineJoin: "round", interactive: false }).addTo(capaViaje);
-        if (i > 0) pie(op.tramos[i - 1].bajar, t.subir);
+        if (i > 0) pie(op.caminos[i]);
       });
-      pie(op.tramos[op.tramos.length - 1].bajar, op.d);
+      pie(op.caminos[op.caminos.length - 1]);
       op.tramos.forEach((t, i) => {
         marcaTexto(capaViaje, t.subir, (i === 0 ? "Suba · " : "Cambie · ") + t.s.l.titulo.replace("Línea", "L."), t.s.l.color);
         if (i === op.tramos.length - 1) marcaTexto(capaViaje, t.bajar, "Bájese", t.s.l.color, true);
@@ -1432,7 +1570,7 @@ function irPestana(p, desdeHistorial = false) {
     elegir(seleccion, true);
   }
   if (!desdeHistorial && antes !== p) history.pushState({ pestana: p }, "", p === "lineas" && seleccion ? location.hash : location.pathname + location.search);
-  if (!lateral.matches) ponerAltura(p === "ir" && !viaje.opcion ? alturaInicio() : paradas()[1]);
+  if (!lateral.matches) ponerAltura(p === "ir" && !viaje.opcion ? alturaInicio() : MEDIA());
   setTimeout(() => reencuadrar(), 80);
 }
 document.querySelectorAll("#nav button").forEach(b => b.addEventListener("click", () => irPestana(b.dataset.p)));
@@ -1461,6 +1599,14 @@ $("b-invertir").addEventListener("click", () => {
   if (viaje.desde && viaje.hasta) calcularViaje(); else pintarSugerencias();
 });
 $("e-cancelar").addEventListener("click", () => cerrarElegir(false));
+$("b-centrar").addEventListener("click", () => {
+  $("b-centrar").classList.add("activo");
+  pedirUbicacion().then(q => {
+    ponerMiPunto(q);
+    if (!enCamiri(q)) { avisar("Usted está lejos de Camiri."); return; }
+    mapa.flyTo(q, Math.max(mapa.getZoom(), 16), { duration: calmo ? 0 : .6 });
+  }).catch(e => { $("b-centrar").classList.remove("activo"); avisar(e); });
+});
 $("e-listo").addEventListener("click", () => cerrarElegir(true));
 
 // ----------------------------------------------------------------- botones
