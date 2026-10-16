@@ -18,7 +18,7 @@
     --navy: #0e2238; --navy-2: #173a5c; --oro: #e8b04a;
     --tinta: #14202e; --suave: #607080; --raya: rgba(20, 32, 46, .09); --fondo: #f3f5f8; --panel: #ffffff; --hover: rgba(20, 32, 46, .05);
     --sombra: 0 -12px 40px rgba(10, 25, 45, .20); --arriba: env(safe-area-inset-top, 0px); --abajo: env(safe-area-inset-bottom, 0px);
-    --barra: 60px; --h: 46vh; --nav: calc(64px + var(--abajo));
+    --barra: 52px; --h: 46vh; --nav: calc(64px + var(--abajo));
   }
   body[data-tema="oscuro"] { --tinta: #eaf0f7; --suave: #9db0c4; --raya: rgba(255, 255, 255, .10); --fondo: #1a2636; --panel: #101b2a; --hover: rgba(255, 255, 255, .07);
                              --sombra: 0 -12px 40px rgba(0, 0, 0, .55); }
@@ -33,7 +33,17 @@
   svg.i { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
   /* ------------------------------------------------------------------ mapa */
-  #mapa { position: fixed; inset: 0; z-index: 0; background: #dfe6ee; }
+  #mapa { position: fixed; inset: 0; z-index: 0; background: #f2eee5; }
+  body[data-tema="oscuro"] #mapa { background: #10161d; }
+  /* mapa propio: calles, ríos y nombres dibujados con datos de OpenStreetMap, sin pedir nada a otro servidor */
+  .leaflet-base-pane, .leaflet-rotulos-pane { pointer-events: none; }
+  body[data-tema="oscuro"] .leaflet-base-pane, body[data-tema="oscuro"] .leaflet-rotulos-pane { filter: invert(1) hue-rotate(185deg) saturate(.6) brightness(.86); }
+  .rb { position: absolute; left: 0; top: 0; white-space: nowrap; font-weight: 700; color: #5b6470; font-size: 11px; letter-spacing: .01em;
+        text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff, 0 0 2px #fff; }
+  .rb.lugar { font-size: 12.5px; font-weight: 800; color: #3d4652; letter-spacing: .03em; }
+  .rb.ciudad { font-size: 16px; font-weight: 800; color: #1d2733; }
+  .rb.poi { font-size: 11px; color: #9a5b1e; }
+  .rb.agua { font-style: italic; color: #4b7fa8; }
   .leaflet-tile-pane { filter: saturate(.5) brightness(1.04); transition: filter .4s ease; }
   body[data-tema="oscuro"]:not(.satelite) .leaflet-tile-pane { filter: invert(1) hue-rotate(185deg) saturate(.5) brightness(.82); }
   body.satelite .leaflet-tile-pane { filter: brightness(.88); }
@@ -47,11 +57,11 @@
   .barra { position: fixed; z-index: 500; top: 0; left: 0; right: 0; height: calc(var(--barra) + var(--arriba)); padding: var(--arriba) 14px 0; display: flex; align-items: center; gap: 11px;
            color: #fff; background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%); box-shadow: 0 6px 22px rgba(10, 25, 45, .28); }
   .barra::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, var(--oro), rgba(232, 176, 74, 0) 70%); }
-  .barra img { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 12px; padding: 3px; flex: none; box-shadow: 0 4px 10px rgba(0, 0, 0, .25); }
+  .barra img { width: 34px; height: 34px; object-fit: contain; background: #fff; border-radius: 10px; padding: 2px; flex: none; box-shadow: 0 3px 8px rgba(0, 0, 0, .22); }
   .barra div { min-width: 0; flex: 1; }
   .barra small { display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--oro); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .barra h1 { margin: 1px 0 0; font-size: 17px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; }
-  #b-instalar { display: none; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; background: var(--oro); color: #1c1400; font-weight: 800; font-size: 12.5px; }
+  .barra h1 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; }
+  #b-instalar { display: none !important; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; background: var(--oro); color: #1c1400; font-weight: 800; font-size: 12.5px; }
   #b-instalar svg { width: 16px; height: 16px; }
 
   /* ---------------------------------------------------------- botones flotantes */
@@ -146,6 +156,36 @@
   .nav button.activa span { background: rgba(232, 176, 74, .34); background: color-mix(in srgb, var(--oro) 34%, transparent); }
 
   /* ------------------------------------------------ ir a un lugar */
+  #vista-ir .cab { padding-top: 8px; }
+  body:not(.con-destino) #c-desde, body:not(.con-destino) #b-invertir { display: none; }
+  body:not(.con-destino) .campos { padding-right: 0; margin-top: 4px; }
+  body:not(.con-destino) #hasta { height: 56px; font-size: 17px; border-radius: 18px; padding-left: 46px; background: var(--panel); border-color: var(--raya);
+                                  box-shadow: 0 6px 18px rgba(10, 25, 45, .10); }
+  body:not(.con-destino) #c-hasta i.b { display: none; }
+  .lupa { display: none; position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: var(--suave); pointer-events: none; }
+  body:not(.con-destino) .lupa { display: block; }
+  .cats { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 6px 6px; }
+  .cat { height: 38px; padding: 0 14px; border-radius: 19px; background: var(--fondo); font-weight: 800; font-size: 14px; display: inline-flex; align-items: center; gap: 7px; }
+  .cat:active { transform: scale(.97); }
+  .cat svg { width: 17px; height: 17px; color: var(--suave); }
+  .cat.volver-cats { background: transparent; border: 1px solid var(--raya); }
+  .mejor { display: inline-block; vertical-align: 2px; margin-left: 6px; font-style: normal; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+           padding: 2px 7px; border-radius: 99px; background: var(--oro); color: #1c1400; }
+  .otras-b { display: flex; align-items: center; justify-content: center; gap: 6px; width: calc(100% - 8px); margin: 0 4px 10px; height: 46px; border-radius: 14px;
+             border: 1px solid var(--raya); font-weight: 800; font-size: 14.5px; color: var(--tinta); }
+  .otras-b svg { width: 16px; height: 16px; transition: transform .25s ease; }
+  .otras-b.abierta svg { transform: rotate(90deg); }
+  #otras .op { border-width: 1px; }
+  .instalar-caja { position: fixed; z-index: 880; left: 12px; right: 12px; top: calc(var(--barra) + var(--arriba) + 10px); max-width: 460px; margin: 0 auto; display: none;
+                   grid-template-columns: 40px 1fr auto 34px; gap: 10px; align-items: center; padding: 10px 10px 10px 12px; border-radius: 18px; background: var(--panel);
+                   box-shadow: 0 12px 30px rgba(10, 25, 45, .22); animation: sube .45s cubic-bezier(.2, .8, .2, 1); }
+  .instalar-caja.ver { display: grid; }
+  .instalar-caja img { width: 40px; height: 40px; border-radius: 11px; }
+  .instalar-caja b { display: block; font-size: 14.5px; font-weight: 800; }
+  .instalar-caja small { display: block; font-size: 12px; color: var(--suave); font-weight: 600; }
+  .instalar-caja .boton { min-height: 38px; padding: 0 14px; font-size: 13.5px; border-radius: 12px; }
+  .instalar-caja .x { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--suave); }
+  .instalar-caja .x svg { width: 16px; height: 16px; }
   .campos { position: relative; margin-top: 10px; display: grid; gap: 8px; padding-right: 50px; }
   .campo { position: relative; }
   .campo i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; border-radius: 50%; }
@@ -168,7 +208,7 @@
   .sug small { display: block; font-size: 12.5px; color: var(--suave); font-weight: 600; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rotulo { margin: 14px 8px 4px; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--suave); font-weight: 800; }
   .ops { display: grid; gap: 8px; margin: 4px 2px 12px; }
-  .op { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; width: 100%; text-align: left; padding: 12px; border-radius: 18px; border: 2px solid var(--raya);
+  .op { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; width: 100%; text-align: left; padding: 11px 12px; border-radius: 18px; border: 2px solid var(--raya);
         transition: border-color .2s ease, background .2s ease; }
   .op.elegida { border-color: var(--oro); background: rgba(232, 176, 74, .08); background: color-mix(in srgb, var(--oro) 8%, transparent); }
   .op-chips { display: flex; align-items: center; gap: 3px; }
@@ -301,11 +341,10 @@
 
   <div class="vista" id="vista-ir">
     <div class="cab arrastre">
-      <div class="cab-fila"><h2>¿A dónde quiere ir?</h2></div>
       <div class="campos">
         <label class="campo" id="c-desde"><i class="a"></i><input id="desde" type="search" placeholder="¿Desde dónde sale?" autocomplete="off" enterkeyhint="search" aria-label="Desde dónde sale">
           <button class="limpiar" data-campo="desde" aria-label="Borrar"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></label>
-        <label class="campo" id="c-hasta"><i class="b"></i><input id="hasta" type="search" placeholder="Busque un lugar, barrio o calle" autocomplete="off" enterkeyhint="search" aria-label="A dónde quiere ir">
+        <label class="campo" id="c-hasta"><i class="b"></i><svg class="i lupa" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.500"/><path d="M20 20l-4.200-4.200"/></svg><input id="hasta" type="search" placeholder="¿A dónde quiere ir?" autocomplete="off" enterkeyhint="search" aria-label="A dónde quiere ir">
           <button class="limpiar" data-campo="hasta" aria-label="Borrar"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></label>
         <button class="b-invertir" id="b-invertir" aria-label="Cambiar origen y destino"><svg class="i" viewBox="0 0 24 24"><path d="M8 4v15M4.500 7.500L8 4l3.500 3.500M16 20V5M12.500 16.500L16 20l3.500-3.500"/></svg></button>
       </div>
@@ -365,11 +404,17 @@
     <button class="boton" id="b-entendido">Entendido</button>
   </div>
 </div>
+<div class="instalar-caja" id="instalar-caja" role="dialog" aria-label="Instalar la aplicación">
+  <img src="icono-192.png" alt=""><div><b>Instale la aplicación</b><small>Queda en su teléfono, como cualquier otra.</small></div>
+  <button class="boton" id="i-instalar">Instalar</button>
+  <button class="x" id="i-cerrar" aria-label="Ahora no"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</div>
 <div id="aviso" role="status"></div>
 <div id="entrada"><div><img src="icono-192.png" alt=""><b>Micros de Camiri</b><span>Municipio de Camiri</span></div></div>
 
 <script src="rutas_datos.js" onerror="void 0"></script>
 <script src="lugares.js" onerror="void 0"></script>
+<script src="mapa_base.js" onerror="void 0"></script>
 <script>
 const CAMIRI = [-20.04, -63.52];
 const PALETA = ["#e5484d", "#3b7bf6", "#12a594", "#8e4ec6", "#f5a524", "#0ea5c6", "#e93d82", "#5b6ad0", "#65a30d", "#b45309"];
@@ -420,8 +465,78 @@ oscuro.addEventListener("change", ponerTema);
 
 // ------------------------------------------------------------------- mapa
 const mapa = L.map("mapa", { zoomControl: false }).setView(CAMIRI, 14);
-const calles = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Mapa &copy; Esri" }).addTo(mapa);
+const calles = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Mapa &copy; Esri" });
 const satelite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, maxNativeZoom: 17, attribution: "Imágenes &copy; Esri" });
+// ------------------------------------------------------------ mapa propio (sin depender de otro servidor)
+// Calles, ríos, plazas y nombres de mapa_base.js (OpenStreetMap). Si ese archivo faltara, se usan las imágenes de Esri.
+const BASE = window.MAPA_BASE || null;
+mapa.createPane("base").style.zIndex = 250;
+mapa.createPane("rotulos").style.zIndex = 260;
+const capaBase = L.layerGroup([], { attribution: "&copy; colaboradores de OpenStreetMap" }), capaRotulos = L.layerGroup(), trazosBase = [];
+if (BASE) {
+  const lienzo = L.canvas({ pane: "base", padding: .4 });
+  const dibujo = { renderer: lienzo, interactive: false, lineCap: "round", lineJoin: "round" };
+  const trazo = (lista, estilo, ancho) => { if (lista.length) { const c = L.polyline(lista, { ...dibujo, ...estilo }).addTo(capaBase); trazosBase.push([c, ancho]); } };
+  const area = (lista, color) => { if (lista.length) L.polygon(lista, { ...dibujo, stroke: false, fillColor: color, fillOpacity: 1 }).addTo(capaBase); };
+  area(BASE.verdes.map(v => [v.p]), "#dbe8c8");
+  area(BASE.agua.filter(a => a.a).map(a => [a.p]), "#bfdcf0");
+  trazo(BASE.agua.filter(a => !a.a && /r[ií]o/i.test(a.n)).map(a => a.p), { color: "#a9d0ec" }, 7);
+  trazo(BASE.agua.filter(a => !a.a && !/r[ií]o/i.test(a.n)).map(a => a.p), { color: "#b9d9ee" }, 2.2);
+  const deClase = c => BASE.vias.filter(v => v.c === c).map(v => v.p);
+  trazo(deClase(3), { color: "#e4dccd" }, 1.6);
+  for (const c of [2, 1, 0]) trazo(deClase(c), { color: c === 0 ? "#d8a65a" : "#cfc6b4" }, [7.5, 6, 4.6][c]);
+  trazo(deClase(2), { color: "#ffffff" }, 3.2);
+  trazo(deClase(1), { color: "#ffffff" }, 4.6);
+  trazo(deClase(0), { color: "#f8d99c" }, 6);
+  capaBase.addTo(mapa);
+  capaRotulos.addTo(mapa);
+} else calles.addTo(mapa);
+function grosorBase() {
+  const z = mapa.getZoom(), f = z <= 12 ? .3 : z <= 13 ? .45 : z <= 14 ? .65 : z <= 15 ? 1 : z <= 16 ? 1.7 : z <= 17 ? 2.8 : 4.2;
+  for (const [c, ancho] of trazosBase) c.setStyle({ weight: Math.max(.6, ancho * f) });
+}
+// Nombres de calles y lugares: solo los que entran sin encimarse en lo que se ve.
+function rotulosBase() {
+  capaRotulos.clearLayers();
+  if (!BASE) return;
+  const z = mapa.getZoom(), vista = mapa.getBounds().pad(.05), puestos = [];
+  // cada nombre ocupa un rectángulo según su largo; no se pone si choca con otro ya puesto
+  const caja = (pt, nombre, px) => { const w = nombre.length * px / 2 + 6, h = 10; return { x1: pt.x - w, x2: pt.x + w, y1: pt.y - h, y2: pt.y + h }; };
+  const libre = (pt, nombre, px, mismo = 0) => { const r = caja(pt, nombre, px);
+    return puestos.every(o => (r.x2 < o.x1 || r.x1 > o.x2 || r.y2 < o.y1 || r.y1 > o.y2) && (o.n !== nombre || Math.hypot(o.x - pt.x, o.y - pt.y) > mismo)); };
+  const ocupar = (pt, nombre, px) => puestos.push(Object.assign(caja(pt, nombre, px), { n: nombre, x: pt.x, y: pt.y }));
+  const poner = (q, nombre, clase, giro = 0) => {
+    const m = L.marker(q, { pane: "rotulos", interactive: false, keyboard: false, icon: L.divIcon({ className: "", iconSize: [0, 0], html: '<span class="rb"></span>' }) }).addTo(capaRotulos);
+    const e = m.getElement().firstChild;
+    e.className = "rb " + clase;
+    e.textContent = nombre;
+    e.style.transform = `translate(-50%, -50%) rotate(${giro}deg)`;
+  };
+  for (const l of BASE.lugares) {
+    if (l.t === "city" || l.t === "town") continue;              // el nombre de la ciudad ya está arriba, en el encabezado
+    const desde = l.t === "poi" ? 16 : 14, px = l.t === "poi" ? 6.4 : 8;
+    if (z < desde || !vista.contains(l.p)) continue;
+    const pt = mapa.latLngToContainerPoint(l.p);
+    if (!libre(pt, l.n, px)) continue;
+    ocupar(pt, l.n, px);
+    poner(l.p, l.n, l.t === "poi" ? "poi" : "lugar");
+  }
+  if (z < 15) return;
+  const candidatas = BASE.vias.filter(v => v.n && v.c < 3 && (z >= 16 || v.c < 2)).concat(BASE.agua.filter(a => a.n && !a.a).map(a => ({ ...a, c: 9 })));
+  for (const v of candidatas) {
+    const k = Math.floor(v.p.length / 2), q = v.p[k];
+    if (!vista.contains(q)) continue;
+    const pt = mapa.latLngToContainerPoint(q), a = mapa.latLngToContainerPoint(v.p[Math.max(0, k - 1)]), b = mapa.latLngToContainerPoint(v.p[Math.min(v.p.length - 1, k + 1)]);
+    if (Math.hypot(b.x - a.x, b.y - a.y) < 4 || !libre(pt, v.n, 6.4, 260)) continue;
+    let giro = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+    if (giro > 90) giro -= 180; else if (giro < -90) giro += 180;          // nunca cabeza abajo
+    ocupar(pt, v.n, 6.4);
+    poner(q, v.n, v.c === 9 ? "agua" : "", giro);
+  }
+}
+mapa.on("zoomend", () => { grosorBase(); rotulosBase(); });
+mapa.on("moveend", rotulosBase);
+grosorBase();
 const capaRutas = L.layerGroup().addTo(mapa), capaMarcas = L.layerGroup().addTo(mapa);
 const capas = new Map();
 
@@ -834,6 +949,7 @@ function guardarReciente(x) {
 }
 
 function pintarCampos() {
+  document.body.classList.toggle("con-destino", !!viaje.hasta);
   for (const c of ["desde", "hasta"]) {
     const v = viaje[c], input = $(c);
     if (document.activeElement !== input) input.value = v ? v.n : "";
@@ -867,11 +983,40 @@ function pintarSugerencias() {
   }
   if (campo === "desde") caja.appendChild(fila(ICONO.gps, "Mi ubicación", "Usar el GPS del teléfono", () => ponerPunto("desde", { n: "Mi ubicación", gps: true, p: null }), true));
   caja.appendChild(fila(ICONO.mapa, "Marcar en el mapa", "Mueva el mapa hasta el lugar", () => abrirElegir(campo)));
-  const rec = leerRecientes();
+  // una categoría abierta: sus lugares; si no, los botones de categorías y los recientes
+  if (categoria) {
+    const cats = document.createElement("div");
+    cats.className = "cats";
+    cats.innerHTML = `<button class="cat volver-cats"><svg class="i" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>${esc(categoria)}</button>`;
+    cats.firstChild.addEventListener("click", () => { categoria = null; pintarSugerencias(); });
+    caja.appendChild(cats);
+    deCategoria(categoria).forEach(x => caja.appendChild(fila(ICONO.lugar, x.n, x.sub, elegirLugar(x))));
+    return;
+  }
+  const cats = document.createElement("div");
+  cats.className = "cats";
+  for (const [nombre] of CATEGORIAS) {
+    if (!deCategoria(nombre).length) continue;
+    const b = document.createElement("button");
+    b.className = "cat";
+    b.textContent = nombre;
+    b.addEventListener("click", () => { categoria = nombre; pintarSugerencias(); });
+    cats.appendChild(b);
+  }
+  if (cats.children.length) { caja.appendChild(rotulo("Buscar por tipo de lugar")); caja.appendChild(cats); }
+  const rec = leerRecientes().slice(0, 3);
   if (rec.length) { caja.appendChild(rotulo("Recientes")); rec.forEach(x => caja.appendChild(fila(ICONO.reloj, x.n, x.sub, elegirLugar(x)))); }
+}
+let categoria = null;
+const CATEGORIAS = [
+  ["Salud", /Hospital|salud|Consultorio|Dentista/i], ["Mercados", /Mercado|Supermercado|Comercio/i], ["Educación", /Colegio|Universidad|Kínder|Instituto|Facultad/i],
+  ["Plazas y parques", /Parque|Plaza|Estadio|Polideportivo/i], ["Iglesias", /Iglesia/i], ["Farmacias", /Farmacia/i],
+  ["Instituciones", /Edificio público|Alcaldía|Policía|Correo|Banco|Juzgado|Bomberos|Terminal|Biblioteca/i], ["Hoteles", /Hotel/i],
+];
+function deCategoria(nombre) {
+  const re = (CATEGORIAS.find(c => c[0] === nombre) || [])[1];
   const vistos = new Set();
-  const utiles = indice.filter(x => /Mercado|Hospital|Terminal|Universidad|Alcald|Plaza|Estadio/i.test(x.sub + " " + x.n) && x.tipo === "lugar" && !vistos.has(x.n) && vistos.add(x.n)).slice(0, 8);
-  if (utiles.length) { caja.appendChild(rotulo("Lugares")); utiles.forEach(x => caja.appendChild(fila(ICONO.lugar, x.n, x.sub, elegirLugar(x)))); }
+  return re ? indice.filter(x => x.tipo === "lugar" && !/^Final de/.test(x.sub) && (re.test(x.sub) || re.test(x.n)) && !vistos.has(x.n) && vistos.add(x.n)) : [];
 }
 
 function ponerPunto(campo, x) {
@@ -1078,18 +1223,30 @@ function tituloDe(op) {
 function mostrarOpcion(i) {
   viaje.opcion = viaje.opciones[i];
   const caja = $("ir-cuerpo");
-  caja.innerHTML = '<div class="ops"></div><div class="pasos" id="pasos"></div>' +
-    '<p class="nota">Tiempo aproximado: caminata más viaje en el micro. No incluye el tiempo de espera del micro. ' +
-    'El micro se puede tomar y dejar en cualquier punto de su recorrido.</p>';
-  viaje.opciones.forEach((op, k) => {
+  caja.innerHTML = '<div class="ops"></div><div class="pasos" id="pasos"></div><div id="otras-zona"></div>' +
+    '<p class="nota">Tiempo aproximado, sin contar la espera del micro.</p>';
+  const tarjeta = (op, k) => {
     const b = document.createElement("button");
     b.className = "op" + (k === i ? " elegida" : "");
-    b.innerHTML = `<span class="op-chips">${chipsDe(op)}</span><span style="min-width:0"><b>${esc(tituloDe(op))}</b><small>${
-      op.aPie ? "Caminar " + textoDist(op.caminar) : "Caminar " + textoMin(minPie(op.caminar)) + " · en micro " + textoMin(op.viajeMin)}${k === 0 && viaje.opciones.length > 1 ? " · recomendada" : ""}</small></span>
+    b.innerHTML = `<span class="op-chips">${chipsDe(op)}</span><span style="min-width:0"><b>${esc(tituloDe(op))}${k === 0 && viaje.opciones.length > 1 ? '<em class="mejor">Recomendada</em>' : ""}</b><small>${
+      op.aPie ? "Caminar " + textoDist(op.caminar) : "Caminar " + textoMin(minPie(op.caminar)) + " · micro " + textoMin(op.viajeMin)}</small></span>
       <span class="op-min tabular">${Math.round(op.total)}<i>min</i></span>`;
     b.addEventListener("click", () => mostrarOpcion(k));
-    caja.querySelector(".ops").appendChild(b);
-  });
+    return b;
+  };
+  caja.querySelector(".ops").appendChild(tarjeta(viaje.opciones[i], i));
+  const otras = viaje.opciones.map((op, k) => [op, k]).filter(([, k]) => k !== i);
+  if (otras.length) {
+    const zona = caja.querySelector("#otras-zona"), boton = document.createElement("button"), lista = document.createElement("div");
+    boton.className = "otras-b";
+    boton.innerHTML = `${otras.length === 1 ? "Ver otra opción" : "Ver otras " + otras.length + " opciones"}${ICONO.flecha}`;
+    lista.id = "otras";
+    lista.className = "ops";
+    lista.hidden = true;
+    otras.forEach(([op, k]) => lista.appendChild(tarjeta(op, k)));
+    boton.addEventListener("click", () => { lista.hidden = !lista.hidden; boton.classList.toggle("abierta", !lista.hidden); });
+    zona.append(boton, lista);
+  }
   pintarPasos(viaje.opcion);
   dibujarViaje(viaje.opcion);
   if (!lateral.matches) ponerAltura(paradas()[1]);
@@ -1150,8 +1307,8 @@ function atenuarLineas(mucho) {
   for (const l of lineas) for (const t of l.tramos) {
     const c = capas.get(t.nombre), el = c.linea.getElement();
     if (el) limpiarTrazo(el);
-    c.linea.setStyle({ opacity: mucho ? .12 : .55, weight: 4 });
-    c.borde.setStyle({ opacity: mucho ? 0 : .5, weight: 7 });
+    c.linea.setStyle({ opacity: mucho ? .1 : .32, weight: mucho ? 3.5 : 3.5 });
+    c.borde.setStyle({ opacity: 0, weight: 7 });
   }
 }
 function dibujarViaje(op) {
@@ -1212,7 +1369,7 @@ function irPestana(p, desdeHistorial = false) {
 }
 document.querySelectorAll("#nav button").forEach(b => b.addEventListener("click", () => irPestana(b.dataset.p)));
 for (const c of ["desde", "hasta"]) {
-  $(c).addEventListener("focus", () => { viaje.campo = c; $(c).select(); if (!lateral.matches) ponerAltura(paradas()[2]); pintarSugerencias(); });
+  $(c).addEventListener("focus", () => { viaje.campo = c; categoria = null; $(c).select(); if (!lateral.matches) ponerAltura(paradas()[2]); pintarSugerencias(); });
   $(c).addEventListener("input", () => { viaje.campo = c; $("c-" + c).classList.toggle("lleno", !!$(c).value); pintarSugerencias(); });
   $(c).addEventListener("keydown", e => { if (e.key === "Enter") { const r = buscarLugares($(c).value); if (r[0]) ponerPunto(c, { n: r[0].n, sub: r[0].sub, p: r[0].p }); } });
 }
@@ -1268,9 +1425,22 @@ $("b-ubicacion").addEventListener("click", () => {
 
 // instalar como aplicación (aparece solo cuando el navegador lo permite)
 let ofertaInstalar = null;
-window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); ofertaInstalar = e; $("b-instalar").style.display = "flex"; });
+const AVISO_INSTALAR = "micros-instalar-visto";
+let instalarVisto = false;
+try { instalarVisto = localStorage.getItem(AVISO_INSTALAR) === "si"; } catch (e) { /* modo privado */ }
+function cerrarInstalar() {
+  $("instalar-caja").classList.remove("ver");
+  try { localStorage.setItem(AVISO_INSTALAR, "si"); } catch (e) { /* modo privado */ }
+}
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  ofertaInstalar = e;
+  if (!instalarVisto) setTimeout(() => { if (!$("bienvenida").classList.contains("ver")) $("instalar-caja").classList.add("ver"); }, 2500);
+});
+$("i-cerrar").addEventListener("click", cerrarInstalar);
+$("i-instalar").addEventListener("click", async () => { cerrarInstalar(); if (ofertaInstalar) { ofertaInstalar.prompt(); await ofertaInstalar.userChoice; ofertaInstalar = null; } });
 $("b-instalar").addEventListener("click", async () => { if (ofertaInstalar) { ofertaInstalar.prompt(); await ofertaInstalar.userChoice; ofertaInstalar = null; $("b-instalar").style.display = "none"; } });
-window.addEventListener("appinstalled", () => { $("b-instalar").style.display = "none"; avisar("Aplicación instalada."); });
+window.addEventListener("appinstalled", () => { cerrarInstalar(); avisar("Aplicación instalada."); });
 
 let relojTamano = null;
 function alCambiarTamano() {
