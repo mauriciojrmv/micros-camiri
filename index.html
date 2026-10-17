@@ -302,6 +302,39 @@
   .punto-viaje { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 4px solid var(--c); box-shadow: 0 2px 6px rgba(0, 0, 0, .4); transform: translate(-50%, -50%); }
   .bandera { width: 30px; height: 30px; transform: translate(-50%, -100%); }
 
+  /* acciones del viaje: avisar, escuchar, compartir */
+  .acc-viaje { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 0 2px 12px; }
+  .acc-viaje button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 4px; border-radius: 14px; background: var(--fondo); font-size: 12.5px; font-weight: 800; line-height: 1.15; text-align: center; }
+  .acc-viaje button svg { width: 20px; height: 20px; }
+  .acc-viaje button.activo { background: #1a73e8; color: #fff; }
+  /* aviso grande al llegar */
+  .alerta { position: fixed; z-index: 2500; left: 12px; right: 12px; top: calc(var(--arriba) + 12px); max-width: 480px; margin: 0 auto; padding: 18px 18px 16px; border-radius: 22px;
+            background: #0e2238; color: #fff; box-shadow: 0 18px 46px rgba(0, 0, 0, .4); display: none; animation: sube .4s cubic-bezier(.2, .8, .2, 1); }
+  .alerta.ver { display: block; }
+  .alerta.urgente { background: #b42318; }
+  .alerta b { display: block; font-size: 22px; font-weight: 800; line-height: 1.2; }
+  .alerta span { display: block; margin-top: 4px; font-size: 15px; opacity: .85; font-weight: 600; }
+  .alerta button { margin-top: 12px; width: 100%; min-height: 48px; border-radius: 14px; background: #fff; color: #0e2238; font-size: 16px; font-weight: 800; }
+  /* aviso de que no hay internet */
+  .sin-red { position: fixed; z-index: 880; left: 50%; top: calc(var(--arriba) + 64px); transform: translateX(-50%); display: none; align-items: center; gap: 7px; padding: 7px 13px;
+             border-radius: 99px; background: #1d2733; color: #fff; font-size: 12.5px; font-weight: 700; box-shadow: 0 6px 16px rgba(0, 0, 0, .25); white-space: nowrap; }
+  .sin-red i { width: 8px; height: 8px; border-radius: 50%; background: #f5a524; }
+  body.sin-internet .sin-red { display: flex; }
+  /* Casa y Trabajo */
+  .mios { display: flex; gap: 8px; margin: 2px 2px 4px; }
+  .mio { flex: 1; display: flex; align-items: center; gap: 9px; min-height: 52px; padding: 0 12px; border-radius: 16px; background: var(--fondo); text-align: left; min-width: 0; }
+  .mio .ic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--panel); flex: none; font-size: 16px; }
+  .mio b { display: block; font-size: 14.5px; font-weight: 800; }
+  .mio small { display: block; font-size: 11.5px; color: var(--suave); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mio span { min-width: 0; }
+  .mio.vacio-mio small { color: #1a73e8; }
+  .editar-mios { flex: none; width: 52px; border-radius: 16px; background: var(--fondo); display: grid; place-items: center; color: var(--suave); }
+  .editar-mios svg { width: 18px; height: 18px; }
+  /* letra grande */
+  body.letra-grande .cuerpo, body.letra-grande .cab, body.letra-grande .f-cab, body.letra-grande .b-caja { zoom: 1.16; }
+  body.letra-grande .nav button { font-size: 14.5px; }
+  .boton.letra { width: 100%; margin: 0 0 10px; }
+
   /* ------------------------------------------------ elegir un punto en el mapa */
   .elegir { display: none; }
   body.eligiendo .elegir { display: block; }
@@ -500,9 +533,12 @@
       <dt>Funciona</dt><dd>Gratis y sin registrarse. Después de abrirla una vez, sirve aunque haya poca señal.</dd>
       <dt>Versión</dt><dd id="acerca-version">—</dd>
     </dl>
+    <button class="boton claro letra" id="b-letra">Aa · Letra más grande: no</button>
     <div class="acciones"><button class="boton claro" id="b-guia">Cómo se usa</button><button class="boton" id="b-acerca-ok">Cerrar</button></div>
   </div>
 </div>
+<div class="alerta" id="alerta" role="alert"><b id="alerta-t"></b><span id="alerta-s"></span><button id="alerta-ok">Entendido</button></div>
+<div class="sin-red" id="sin-red"><i></i>Sin internet · funciona con lo guardado</div>
 <div id="aviso" role="status"></div>
 <div id="entrada"><div><img src="icono-192.png" alt=""><b>Micros de Camiri</b><span>Municipio de Camiri</span></div></div>
 
@@ -624,10 +660,14 @@ function rotulosBase() {
   if (!BASE) return;
   const z = mapa.getZoom(), vista = mapa.getBounds().pad(.05), puestos = [];
   // cada nombre ocupa un rectángulo según su largo; no se pone si choca con otro ya puesto
-  const caja = (pt, nombre, px) => { const w = nombre.length * px / 2 + 6, h = 10; return { x1: pt.x - w, x2: pt.x + w, y1: pt.y - h, y2: pt.y + h }; };
-  const libre = (pt, nombre, px, mismo = 0) => { const r = caja(pt, nombre, px);
+  const caja = (pt, nombre, px, giro = 0) => {              // rectángulo que ocupa el nombre, girado si va inclinado
+    const w = nombre.length * px / 2 + 6, h = 9, r = giro * Math.PI / 180, c = Math.abs(Math.cos(r)), sn = Math.abs(Math.sin(r));
+    const W = w * c + h * sn, H = w * sn + h * c;
+    return { x1: pt.x - W, x2: pt.x + W, y1: pt.y - H, y2: pt.y + H };
+  };
+  const libre = (pt, nombre, px, mismo = 0, giro = 0) => { const r = caja(pt, nombre, px, giro);
     return puestos.every(o => (r.x2 < o.x1 || r.x1 > o.x2 || r.y2 < o.y1 || r.y1 > o.y2) && (o.n !== nombre || Math.hypot(o.x - pt.x, o.y - pt.y) > mismo)); };
-  const ocupar = (pt, nombre, px) => puestos.push(Object.assign(caja(pt, nombre, px), { n: nombre, x: pt.x, y: pt.y }));
+  const ocupar = (pt, nombre, px, giro = 0) => puestos.push(Object.assign(caja(pt, nombre, px, giro), { n: nombre, x: pt.x, y: pt.y }));
   const poner = (q, nombre, clase, giro = 0) => {
     const m = L.marker(q, { pane: "rotulos", interactive: false, keyboard: false, icon: L.divIcon({ className: "", iconSize: [0, 0], html: '<span class="rb"></span>' }) }).addTo(capaRotulos);
     const e = m.getElement().firstChild;
@@ -651,10 +691,11 @@ function rotulosBase() {
     const k = Math.floor(v.p.length / 2), q = v.p[k];
     if (!vista.contains(q)) continue;
     const pt = mapa.latLngToContainerPoint(q), a = mapa.latLngToContainerPoint(v.p[Math.max(0, k - 1)]), b = mapa.latLngToContainerPoint(v.p[Math.min(v.p.length - 1, k + 1)]);
-    if (Math.hypot(b.x - a.x, b.y - a.y) < 4 || !libre(pt, v.n, 6.4, 260)) continue;
+    if (Math.hypot(b.x - a.x, b.y - a.y) < 4) continue;
     let giro = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
     if (giro > 90) giro -= 180; else if (giro < -90) giro += 180;          // nunca cabeza abajo
-    ocupar(pt, v.n, 6.4);
+    if (!libre(pt, v.n, 6.4, 260, giro)) continue;
+    ocupar(pt, v.n, 6.4, giro);
     poner(q, v.n, v.c === 9 ? "agua" : "", giro);
   }
 }
@@ -841,7 +882,10 @@ function soltarArrastre(enAsa) {
   arrastre = null;
   animarHoja(destino, dur);
 }
+// vibración: los toques cortos respetan "reducir movimiento"; los avisos de bajada vibran siempre
+function vibrar(patron, siempre = false) { try { if (navigator.vibrate && (siempre || !calmo)) navigator.vibrate(patron); } catch (e) { /* no vibra */ } }
 function animarHoja(px, dur) {
+  if (Math.abs(px - alturaPx) > 30) vibrar(8);        // un toque corto al acomodarse en una posición
   const el = [$("hoja"), $("b-centrar")];
   el.forEach(e => { e.style.transitionDuration = dur + "ms"; });
   ponerAltura(px);
@@ -1373,6 +1417,29 @@ function pintarSugerencias() {
     return;
   }
   if (campo === "desde") caja.appendChild(fila(ICONO.gps, "Mi ubicación", "Usar el GPS del teléfono", () => ponerPunto("desde", { n: "Mi ubicación", gps: true, p: null }), true));
+  // Casa y Trabajo: un toque y arma el viaje; si no están guardados, se marcan en el mapa
+  const mios = leerMios(), fila2 = document.createElement("div");
+  fila2.className = "mios";
+  for (const [k, nombre, icono] of [["casa", "Casa", "🏠"], ["trabajo", "Trabajo", "💼"]]) {
+    const b = document.createElement("button"), x = mios[k];
+    b.className = "mio" + (x ? "" : " vacio-mio");
+    b.innerHTML = `<span class="ic">${icono}</span><span><b>${nombre}</b><small></small></span>`;
+    b.querySelector("small").textContent = x ? (x.ref || "Guardado") : "Guardar";
+    b.addEventListener("click", () => x ? ponerPunto(campo, { n: nombre, sub: x.ref || "", p: x.p }) : abrirElegir(k));
+    fila2.appendChild(b);
+  }
+  if (mios.casa || mios.trabajo) {
+    const e = document.createElement("button");
+    e.className = "editar-mios";
+    e.setAttribute("aria-label", "Cambiar Casa o Trabajo");
+    e.innerHTML = '<svg class="i" viewBox="0 0 24 24"><path d="M4 20h4l10.500-10.500-4-4L4 16v4zM13.500 6.500l4 4"/></svg>';
+    e.addEventListener("click", () => {
+      const k = !mios.casa ? "casa" : !mios.trabajo ? "trabajo" : confirm("¿Cambiar Casa? (Cancelar para cambiar Trabajo)") ? "casa" : "trabajo";
+      abrirElegir(k);
+    });
+    fila2.appendChild(e);
+  }
+  caja.appendChild(fila2);
   caja.appendChild(fila(ICONO.mapa, "Marcar en el mapa", "Mueva el mapa hasta el lugar", () => abrirElegir(campo)));
   // una categoría abierta: sus lugares; si no, los botones de categorías y los recientes
   if (categoria) {
@@ -1426,10 +1493,11 @@ let eligiendo = null;
 function abrirElegir(campo) {
   eligiendo = campo;
   document.activeElement && document.activeElement.blur();
-  $("elegir-titulo").textContent = campo === "desde" ? "Mueva el mapa hasta donde sale" : "Mueva el mapa hasta donde quiere ir";
+  $("elegir-titulo").textContent = campo === "casa" ? "Mueva el mapa hasta su casa" : campo === "trabajo" ? "Mueva el mapa hasta su trabajo"
+    : campo === "desde" ? "Mueva el mapa hasta donde sale" : "Mueva el mapa hasta donde quiere ir";
   document.body.classList.add("eligiendo");
   capaViaje.remove();
-  const ya = viaje[campo] && viaje[campo].p;
+  const ya = campo === "casa" || campo === "trabajo" ? (leerMios()[campo] || {}).p : viaje[campo] && viaje[campo].p;
   mapa.invalidateSize();
   if (ya) mapa.setView(ya, Math.max(mapa.getZoom(), 16), { animate: false });
   else if (mapa.getZoom() < 15) mapa.setView(mapa.getCenter(), 15, { animate: false });
@@ -1442,8 +1510,19 @@ function cerrarElegir(listo) {
   const c = mapa.getCenter(), p = [+c.lat.toFixed(6), +c.lng.toFixed(6)], ref = referencia(p);
   const campo = eligiendo;
   eligiendo = null;
+  if (campo === "casa" || campo === "trabajo") {
+    const m = leerMios();
+    m[campo] = { p, ref: ref || "" };
+    try { localStorage.setItem(MIOS, JSON.stringify(m)); } catch (e) { /* modo privado */ }
+    avisar(campo === "casa" ? "Casa guardada. Tóquela para ir." : "Trabajo guardado. Tóquelo para ir.");
+    pintarSugerencias();
+    return;
+  }
   ponerPunto(campo, { n: ref ? (ref.startsWith("cerca de") ? "Punto " + ref : ref) : "Punto marcado en el mapa", sub: "Marcado en el mapa", p });
 }
+
+const MIOS = "micros-mis-lugares";
+const leerMios = () => { try { return JSON.parse(localStorage.getItem(MIOS)) || {}; } catch (e) { return {}; } };
 
 // ---- mi ubicación
 // Primero una posición aproximada (llega en uno o dos segundos); después el GPS la afina solo, sin hacer esperar.
@@ -1466,11 +1545,12 @@ let siguiendo = false, relojVigilar = null, volando = false;
 function afinarUbicacion() {
   if (!navigator.geolocation) return;
   clearTimeout(relojVigilar);
-  relojVigilar = setTimeout(dejarDeVigilar, siguiendo ? 600000 : 120000);   // se apaga solo, para cuidar la batería
+  relojVigilar = setTimeout(dejarDeVigilar, aviso ? 5400000 : siguiendo ? 600000 : 120000);   // se apaga solo, para cuidar la batería (con aviso, hasta 90 min)
   if (vigilando !== null) return;
   vigilando = navigator.geolocation.watchPosition(pos => {
     ultimaUbic = { p: [pos.coords.latitude, pos.coords.longitude], t: Date.now() };
     if (marcaYo) marcaYo.setLatLng(ultimaUbic.p);
+    revisarAviso(ultimaUbic.p);
     if (pos.coords.speed > 1 && pos.coords.heading != null) ponerRumbo(pos.coords.heading);
     const c = mapa.getCenter();
     if (siguiendo && !volando && metros([c.lat, c.lng], ultimaUbic.p) > 8) mapa.panTo(ultimaUbic.p, { animate: !calmo, duration: .4 });   // solo si de verdad se movió
@@ -1745,7 +1825,12 @@ function tituloDe(op) {
 function mostrarOpcion(i) {
   viaje.opcion = viaje.opciones[i];
   const caja = $("ir-cuerpo");
-  caja.innerHTML = '<div class="ops"></div><div class="pasos" id="pasos"></div><div id="otras-zona"></div>' +
+  const conMicro = !viaje.opciones[i].aPie;
+  caja.innerHTML = '<div class="ops"></div>' + `<div class="acc-viaje">
+      ${conMicro ? `<button id="b-avisar" class="${aviso ? "activo" : ""}"><svg class="i" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.500 2h-15L6 16zM10 20.500a2 2 0 0 0 4 0"/></svg>${aviso ? "Aviso activo" : "Avíseme al bajar"}</button>` : ""}
+      <button id="b-escuchar"><svg class="i" viewBox="0 0 24 24"><path d="M4 9.500h3.500L12 5.500v13L7.500 14.500H4v-5zM15.500 9a4 4 0 0 1 0 6M18 6.500a7.500 7.500 0 0 1 0 11"/></svg>Escuchar</button>
+      <button id="b-compartir-v"><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.500"/><circle cx="18" cy="6" r="2.500"/><circle cx="18" cy="18" r="2.500"/><path d="M8.200 10.900l7.600-3.800M8.200 13.100l7.600 3.800"/></svg>Compartir</button>
+    </div>` + '<div class="pasos" id="pasos"></div><div id="otras-zona"></div>' +
     '<p class="nota">Tiempo aproximado, sin contar la espera del micro.</p>';
   const tarjeta = (op, k) => {
     const b = document.createElement("button");
@@ -1770,6 +1855,10 @@ function mostrarOpcion(i) {
     zona.append(boton, lista);
   }
   pintarPasos(viaje.opcion);
+  if (!conMicro) caja.querySelector(".acc-viaje").style.gridTemplateColumns = "1fr 1fr";
+  if ($("b-avisar")) $("b-avisar").addEventListener("click", () => aviso ? apagarAviso(true) : activarAviso());
+  $("b-escuchar").addEventListener("click", escucharViaje);
+  $("b-compartir-v").addEventListener("click", compartirViaje);
   dibujarViaje(viaje.opcion);
   if (!lateral.matches) ponerAltura(MEDIA());
   setTimeout(() => reencuadrar(), 60);
@@ -1880,6 +1969,7 @@ function nuevoViaje() {
   setTimeout(() => reencuadrar(), 60);
 }
 function quitarViaje() {
+  if (aviso) apagarAviso(false);
   document.body.classList.remove("ver-desde");
   viaje.opcion = null;
   viaje.opciones = [];
@@ -1901,6 +1991,84 @@ function irAlLugar(x) {
   irPestana("ir");
   pintarCampos();
   calcularViaje();
+}
+
+// ================================================================ avisar al llegar, escuchar y compartir
+// "Avíseme al bajar": con el GPS del teléfono, avisa (vibración, voz y cartel) al acercarse a donde hay que bajarse.
+// La app tiene que quedar abierta; mientras tanto la pantalla no se apaga sola.
+let aviso = null, bloqueoPantalla = null;
+async function pantallaEncendida(si) {
+  try {
+    if (si && "wakeLock" in navigator && !bloqueoPantalla) { bloqueoPantalla = await navigator.wakeLock.request("screen"); bloqueoPantalla.addEventListener("release", () => { bloqueoPantalla = null; }); }
+    if (!si && bloqueoPantalla) { await bloqueoPantalla.release(); bloqueoPantalla = null; }
+  } catch (e) { /* el teléfono no lo permite */ }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && aviso) { pantallaEncendida(true); afinarUbicacion(); } });
+function activarAviso() {
+  const op = viaje.opcion;
+  if (!op || op.aPie) return;
+  aviso = { op, puntos: op.tramos.map((t, i) => ({ p: t.bajar, donde: referencia(t.bajar), linea: t.s.l.titulo,
+    sigue: i < op.tramos.length - 1 ? op.tramos[i + 1].s.l.titulo : null, cerca: false, ya: false })) };
+  if (window.speechSynthesis) speechSynthesis.getVoices();
+  pantallaEncendida(true);
+  afinarUbicacion();
+  vibrar(20);
+  avisar("Le aviso cuando se acerque a donde tiene que bajarse. Deje la aplicación abierta.");
+  if ($("b-avisar")) { $("b-avisar").classList.add("activo"); $("b-avisar").lastChild.textContent = "Aviso activo"; }
+  if (ultimaUbic) revisarAviso(ultimaUbic.p);
+}
+function apagarAviso(porLaPersona) {
+  aviso = null;
+  pantallaEncendida(false);
+  if ($("b-avisar")) { $("b-avisar").classList.remove("activo"); $("b-avisar").lastChild.textContent = "Avíseme al bajar"; }
+  if (porLaPersona) avisar("Aviso apagado.");
+}
+function alertar(titulo, sub, urgente) {
+  $("alerta-t").textContent = titulo;
+  $("alerta-s").textContent = sub || "";
+  $("alerta").classList.toggle("urgente", !!urgente);
+  $("alerta").classList.add("ver");
+  vibrar(urgente ? [400, 150, 400, 150, 400] : [200, 100, 200], true);
+  hablar(titulo + ". " + (sub || ""));
+}
+$("alerta-ok").addEventListener("click", () => { $("alerta").classList.remove("ver"); if (window.speechSynthesis) speechSynthesis.cancel(); });
+function revisarAviso(p) {
+  if (!aviso) return;
+  const q = aviso.puntos.find(x => !x.ya);
+  if (!q) return;
+  const d = metros(p, q.p), donde = q.donde ? (q.donde.startsWith("cerca de") ? q.donde : "en " + q.donde) : "en la parada marcada";
+  if (!q.cerca && d < 350) { q.cerca = true; alertar("Prepárese para bajar", "Falta poco: bájese " + donde + "."); }
+  if (d < 90) {
+    q.ya = true;
+    alertar(q.sigue ? "Bájese aquí y cambie de micro" : "Bájese aquí", q.sigue ? "Ahora tome la " + q.sigue + "." : "Llegó a su parada. Desde aquí camine hasta " + viaje.hasta.n + ".", true);
+    if (!aviso.puntos.some(x => !x.ya)) setTimeout(() => apagarAviso(false), 4000);
+  }
+}
+// Leer en voz alta, con la voz del teléfono (no necesita internet en la mayoría de los teléfonos)
+function hablar(texto) {
+  if (!("speechSynthesis" in window)) return false;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(texto), voces = speechSynthesis.getVoices();
+  u.lang = "es-ES";
+  u.voice = voces.find(v => /^es[-_](BO|419|MX|AR|US)/i.test(v.lang)) || voces.find(v => /^es/i.test(v.lang)) || null;
+  u.rate = .92;
+  speechSynthesis.speak(u);
+  return true;
+}
+function textoPasos() { return [...document.querySelectorAll("#pasos .paso")].map(x => x.querySelector("b").textContent + ". " + x.querySelector("small").textContent).join(" "); }
+function escucharViaje() {
+  if (window.speechSynthesis && speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
+  const op = viaje.opcion;
+  if (!hablar(`Para ir a ${viaje.hasta.n}, tarda unos ${Math.round(op.total)} minutos. ${textoPasos()}`)) avisar("Este teléfono no puede leer en voz alta.");
+}
+async function compartirViaje() {
+  const op = viaje.opcion;
+  const pasos = [...document.querySelectorAll("#pasos .paso")].map(x => "• " + x.querySelector("b").textContent + (x.querySelector("small").textContent ? " — " + x.querySelector("small").textContent : ""));
+  const texto = `Cómo llegar a ${viaje.hasta.n} en micro (unos ${Math.round(op.total)} min):\n${pasos.join("\n")}\n\nMicros de Camiri: ${location.origin + location.pathname}`;
+  try {
+    if (navigator.share) await navigator.share({ title: "Micros de Camiri", text: texto });
+    else window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank", "noopener");
+  } catch (e) { /* la persona cerró el cuadro */ }
 }
 
 // ================================================================ pestañas
@@ -2054,6 +2222,18 @@ $("barra").addEventListener("click", () => {
   $("acerca").classList.add("ver");
 });
 $("b-acerca-ok").addEventListener("click", () => $("acerca").classList.remove("ver"));
+const LETRA = "micros-letra-grande";
+function ponerLetra(si) {
+  document.body.classList.toggle("letra-grande", si);
+  $("b-letra").textContent = "Aa · Letra más grande: " + (si ? "sí" : "no");
+  try { localStorage.setItem(LETRA, si ? "si" : "no"); } catch (e) { /* modo privado */ }
+}
+try { if (localStorage.getItem(LETRA) === "si") ponerLetra(true); } catch (e) { /* modo privado */ }
+$("b-letra").addEventListener("click", () => ponerLetra(!document.body.classList.contains("letra-grande")));
+const verRed = () => document.body.classList.toggle("sin-internet", !navigator.onLine);
+window.addEventListener("online", verRed);
+window.addEventListener("offline", verRed);
+verRed();
 $("acerca").addEventListener("click", e => { if (e.target.id === "acerca") $("acerca").classList.remove("ver"); });
 $("b-guia").addEventListener("click", () => { $("acerca").classList.remove("ver"); $("bienvenida").classList.add("ver"); });
 $("b-entendido").addEventListener("click", () => {
