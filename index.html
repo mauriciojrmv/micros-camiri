@@ -201,6 +201,12 @@
 
   /* ------------------------------------------------ ir a un lugar */
   #vista-ir .cab { padding-top: 8px; }
+  /* encabezado del viaje con el botón para empezar otro */
+  .viaje-cab { display: none; align-items: center; justify-content: space-between; margin: 2px 2px 8px; }
+  body.con-destino .viaje-cab { display: flex; }
+  .viaje-cab b { font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
+  .nuevo-viaje { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px 0 11px; border-radius: 18px; background: var(--fondo); font-size: 13.5px; font-weight: 800; }
+  .nuevo-viaje svg { width: 16px; height: 16px; }
   body:not(.con-destino) #c-desde, body:not(.con-destino) #b-invertir { display: none; }
   body:not(.con-destino) .campos { padding-right: 0; margin-top: 4px; }
   body:not(.con-destino) #hasta { height: 56px; font-size: 17px; border-radius: 18px; padding-left: 46px; background: var(--panel); border-color: var(--raya);
@@ -390,6 +396,8 @@
 
   <div class="vista" id="vista-ir">
     <div class="cab arrastre">
+      <div class="viaje-cab"><b>Su viaje</b>
+        <button class="nuevo-viaje" id="b-nuevo"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>Nuevo viaje</button></div>
       <div class="campos">
         <label class="campo" id="c-desde"><i class="a"></i><input id="desde" type="search" placeholder="¿Desde dónde sale?" autocomplete="off" enterkeyhint="search" aria-label="Desde dónde sale">
           <button class="limpiar" data-campo="desde" aria-label="Borrar"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></label>
@@ -1704,6 +1712,13 @@ function dibujarViaje(op) {
   if (d) L.marker(d, { interactive: false, keyboard: false, icon: L.divIcon({ className: "", iconSize: [0, 0],
     html: '<svg class="bandera" viewBox="0 0 24 24"><path d="M12 22s7.500-6.500 7.500-12.500a7.500 7.500 0 0 0-15 0C4.500 15.500 12 22 12 22z" fill="#e5484d" stroke="#fff" stroke-width="1.600"/><circle cx="12" cy="9.500" r="2.800" fill="#fff"/></svg>' }) }).addTo(capaViaje);
 }
+// Empezar de cero: sin destino, saliendo otra vez desde mi ubicación, y el mapa mostrando toda la red.
+function nuevoViaje() {
+  viaje.desde = { n: "Mi ubicación", gps: true, p: null };
+  quitarViaje();
+  if (history.state && history.state.viaje) history.replaceState({ pestana: "ir" }, "");
+  setTimeout(() => reencuadrar(), 60);
+}
 function quitarViaje() {
   document.body.classList.remove("ver-desde");
   viaje.opcion = null;
@@ -1773,6 +1788,7 @@ $("b-invertir").addEventListener("click", () => {
   if (viaje.desde && viaje.hasta) calcularViaje(); else pintarSugerencias();
 });
 $("e-cancelar").addEventListener("click", () => cerrarElegir(false));
+$("b-nuevo").addEventListener("click", nuevoViaje);
 $("b-desde-mini").addEventListener("click", () => { document.body.classList.add("ver-desde"); $("desde").focus(); });
 // Centrar: lleva el mapa a donde estoy y lo sigue mientras camino; si muevo el mapa con el dedo, deja de seguir.
 $("b-centrar").addEventListener("click", () => {
