@@ -1092,6 +1092,16 @@ function limpiarTrazo(el) { el.style.transition = ""; el.style.strokeDasharray =
 
 function reencuadrar(animado = true) {
   if (pestana === "ir" && viaje.opcion) { encuadrar(puntosViaje(viaje.opcion), animado); return; }
+  if (pestana === "ir" && miPunto && enCamiri(miPunto)) {          // sin viaje: el mapa en donde estoy (si ya se sabe)
+    if (animado && !calmo) mapa.flyTo(miPunto, Math.max(mapa.getZoom(), 15), { duration: .6 }); else mapa.setView(miPunto, Math.max(mapa.getZoom(), 15), { animate: false });
+    return;
+  }
+  if (pestana === "ir") {                     // sin viaje y sin GPS: el centro de Camiri, donde salen los micros
+    const n = lineas.length || 1, centro = lineas.length ? [lineas.reduce((t, l) => t + l.inicio[0], 0) / n, lineas.reduce((t, l) => t + l.inicio[1], 0) / n] : CAMIRI;
+    const corrido = mapa.unproject(mapa.project(centro, 15).add([0, Math.min(alturaActual(), innerHeight * .5) / 2]), 15);   // que no quede detrás del panel
+    if (animado && !calmo) mapa.flyTo(corrido, 15, { duration: .6 }); else mapa.setView(corrido, 15, { animate: false });
+    return;
+  }
   const l = lineas.find(x => x.nombre === seleccion);
   encuadrar(l ? l.tramos.flatMap(t => t.pts) : lineas.flatMap(x => x.tramos.flatMap(t => t.pts)), animado);
 }
@@ -1901,11 +1911,14 @@ function irPestana(p, desdeHistorial = false) {
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("activa", b.dataset.p === p));
   if (p === "ir") {
     if (seleccion) { seleccion = null; document.body.classList.remove("en-ficha"); if (location.hash) history.replaceState({ pestana: "ir" }, "", location.pathname + location.search); }
+    mapa.removeLayer(capaRutas);            // "Ir a un lugar" empieza con el mapa limpio: solo se dibuja el viaje
+    capaMarcas.clearLayers();
     capaViaje.addTo(mapa);
     pintarCampos();
     if (viaje.opcion) mostrarOpcion(viaje.opciones.indexOf(viaje.opcion)); else { dibujarViaje(null); pintarSugerencias(); }
   } else {
     capaViaje.remove();
+    capaRutas.addTo(mapa);                  // en "Líneas" se ve toda la red
     elegir(seleccion, true);
   }
   if (!desdeHistorial && antes !== p) history.pushState({ pestana: p }, "", p === "lineas" && seleccion ? location.hash : location.pathname + location.search);
