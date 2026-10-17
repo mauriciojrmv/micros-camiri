@@ -86,7 +86,8 @@
 
   /* ------------------------------------------------------------------ hoja */
   .hoja { position: fixed; z-index: 600; left: 0; right: 0; bottom: var(--nav); height: var(--hmax, 46vh); transform: translateY(var(--baja, 0px)); background: var(--panel); border-radius: 24px 24px 0 0; box-shadow: var(--sombra);
-          display: flex; flex-direction: column; transition: transform .34s cubic-bezier(.2, .8, .2, 1); will-change: transform; }
+          display: flex; flex-direction: column; transition: transform .34s cubic-bezier(.22, 1, .36, 1); will-change: transform; }
+  .hoja::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 90px; background: var(--panel); }   /* al estirar de más no se ve el hueco */
   body.escribiendo .nav, body.escribiendo .fabs, body.escribiendo .fab-centro, body.escribiendo .b-vista { display: none; }
   /* "Saliendo de": una línea chica debajo del buscador para planear el viaje desde otro lugar */
   .desde-mini { display: flex; align-items: center; gap: 8px; width: 100%; margin: 9px 0 0; padding: 0 6px; font-size: 13.5px; font-weight: 700; color: var(--suave); text-align: left; }
@@ -754,27 +755,32 @@ function encuadrar(pts, animado = true) {
 const altoNav = () => lateral.matches ? 0 : ($("nav") ? $("nav").offsetHeight : 64);
 // tres alturas: baja (buscador y categorías), media y casi toda la pantalla
 // cuatro alturas: casi oculto (solo la manija y el buscador), baja, media y casi toda la pantalla
-const paradas = () => { const libre = window.innerHeight - altoNav(), media = Math.round(libre * .5); return [96, Math.min(media, 290), media, libre - 70]; };
-const ALTA = () => paradas()[3], MEDIA = () => paradas()[2];
+// tres posiciones: casi oculto (solo la manija y el buscador), media y alta
+const paradas = () => { const libre = window.innerHeight - altoNav(); return [96, Math.round(libre * .46), libre - 70]; };
+const ALTA = () => paradas()[2], MEDIA = () => paradas()[1];
 let alturaPx = 0;
 const alturaActual = () => lateral.matches ? 0 : alturaPx;
 // El panel siempre mide lo máximo y se desliza hacia abajo: mover algo es mucho más liviano que cambiarle el alto.
 let relojOculto = null;
 function ponerAltura(px, sinMover = false) {
   if (document.body.classList.contains("escribiendo")) return;
-  const p = paradas(), hoja = $("hoja");
-  alturaPx = Math.max(p[0], Math.min(p[3], px));
-  hoja.style.setProperty("--hmax", p[3] + "px");
-  hoja.style.setProperty("--baja", (p[3] - alturaPx) + "px");
+  const p = paradas(), hoja = $("hoja"), min = p[0], max = p[p.length - 1];
+  if (sinMover) {                            // con el dedo: más allá de los extremos se estira con resistencia (rebote elástico)
+    if (px > max) px = max + Math.min(60, (px - max) * .3);
+    if (px < min) px = min - Math.min(40, (min - px) * .3);
+    alturaPx = px;
+  } else alturaPx = Math.max(min, Math.min(max, px));
+  hoja.style.setProperty("--hmax", max + "px");
+  hoja.style.setProperty("--baja", (max - alturaPx) + "px");
   document.querySelector(".fabs").style.transform = `translateY(${-alturaPx}px)`;
   $("b-centrar").style.transform = `translateY(${-alturaPx}px)`;
-  document.body.classList.toggle("hoja-llena", alturaPx > p[2] + 60);
+  document.body.classList.toggle("hoja-llena", alturaPx > p[1] + 60);
   if (sinMover) { document.body.classList.add("arrastrando"); return; }
   document.body.classList.remove("arrastrando");
   clearTimeout(relojOculto);                // al quedar quieto, la lista deja lugar abajo para poder verla entera
-  relojOculto = setTimeout(() => hoja.style.setProperty("--oculto", (p[3] - alturaPx) + "px"), 360);
+  relojOculto = setTimeout(() => hoja.style.setProperty("--oculto", (max - alturaPx) + "px"), 480);
 }
-const alturaInicio = () => paradas()[1];                     // al abrir: el buscador y las categorías, con el mapa a la vista
+const alturaInicio = () => MEDIA();                     // al abrir: el buscador y las categorías, con el mapa a la vista
 // Mientras se escribe, el panel queda justo encima del teclado y deja ver parte del mapa.
 const vv = window.visualViewport;
 function modoEscribir(si) {
@@ -806,31 +812,77 @@ function alSalirDeCampo() {
   setTimeout(() => { if (!document.activeElement || !document.activeElement.matches("#desde, #hasta, #buscar")) modoEscribir(false); }, 320);
 }
 function alturaCercana(px) { return paradas().reduce((a, b) => Math.abs(b - px) < Math.abs(a - px) ? b : a); }
+// El panel sigue al dedo; al soltarlo, la velocidad del gesto decide a qué posición va (como en los mapas de los teléfonos).
 let arrastre = null;
+function empezarArrastre(y) { arrastre = { y0: y, h0: alturaPx, movio: false, muestras: [[performance.now(), y]] }; }
+function moverArrastre(y) {
+  const d = arrastre.y0 - y;
+  if (Math.abs(d) > 3) arrastre.movio = true;
+  arrastre.muestras.push([performance.now(), y]);
+  if (arrastre.muestras.length > 12) arrastre.muestras.shift();
+  if (arrastre.movio) ponerAltura(arrastre.h0 + d, true);
+}
+function soltarArrastre(enAsa) {
+  const p = paradas(), m = arrastre.muestras, ahora = performance.now();
+  let v = 0;                                  // velocidad en px por milisegundo (positiva = hacia arriba)
+  const recientes = m.filter(x => ahora - x[0] < 110);          // solo el final del gesto: es lo que se siente al soltar
+  if (recientes.length >= 2) { const [t0, y0] = recientes[0], [t1, y1] = recientes[recientes.length - 1]; if (t1 > t0) v = (y0 - y1) / (t1 - t0); }
+  let destino;
+  if (!arrastre.movio) destino = enAsa ? p[(p.indexOf(alturaCercana(alturaPx)) + 1) % p.length] : alturaCercana(alturaPx);   // un toque en la manija pasa a la siguiente
+  else {
+    destino = alturaCercana(alturaPx + v * 260);          // adonde lo llevaría el impulso
+    if (Math.abs(v) > .25) {                                // gesto rápido: por lo menos a la siguiente posición en esa dirección
+      const sig = v > 0 ? p.find(x => x > alturaPx + 4) : [...p].reverse().find(x => x < alturaPx - 4);
+      if (sig !== undefined && (v > 0 ? destino < sig : destino > sig)) destino = sig;
+    }
+  }
+  const dist = Math.abs(destino - alturaPx);
+  const dur = Math.round(Math.max(220, Math.min(480, Math.abs(v) > .3 ? dist / Math.abs(v) * 1.8 : 280 + dist * .45)));
+  arrastre = null;
+  animarHoja(destino, dur);
+}
+function animarHoja(px, dur) {
+  const el = [$("hoja"), $("b-centrar")];
+  el.forEach(e => { e.style.transitionDuration = dur + "ms"; });
+  ponerAltura(px);
+  setTimeout(() => el.forEach(e => { e.style.transitionDuration = ""; }), dur + 40);
+}
+// manija y cabecera: con el dedo o con el ratón
 function alTocar(e) {
   if (lateral.matches || e.target.closest("button, input, a")) return;
-  arrastre = { y: e.clientY, h: alturaPx, movio: false, id: e.pointerId };
+  empezarArrastre(e.clientY);
+  arrastre.asa = !!e.target.closest("#agarre");
 }
-function alMover(e) {
-  if (!arrastre) return;
-  const d = arrastre.y - e.clientY;
-  if (Math.abs(d) > 4) arrastre.movio = true;
-  if (arrastre.movio) ponerAltura(arrastre.h + d, true);
-}
-function alSoltar(e) {
-  if (!arrastre) return;
-  const d = arrastre.y - e.clientY, p = paradas();
-  let destino;
-  if (!arrastre.movio) destino = e.target.closest("#agarre") ? p[(p.indexOf(alturaCercana(alturaPx)) + 1) % p.length] : alturaPx;   // un toque en el asa pasa a la siguiente altura
-  else if (Math.abs(d) > 60) destino = d > 0 ? p.find(x => x > arrastre.h + 10) || p[p.length - 1] : [...p].reverse().find(x => x < arrastre.h - 10) || p[0];
-  else destino = alturaCercana(alturaPx);
-  arrastre = null;
-  ponerAltura(destino);                      // el mapa se queda donde la persona lo dejó
-}
+function alMover(e) { if (arrastre && !arrastre.tactil) moverArrastre(e.clientY); }
+function alSoltar() { if (arrastre && !arrastre.tactil) soltarArrastre(arrastre.asa); }
 document.querySelectorAll(".arrastre").forEach(z => z.addEventListener("pointerdown", alTocar));
 window.addEventListener("pointermove", alMover);
 window.addEventListener("pointerup", alSoltar);
-window.addEventListener("pointercancel", () => { if (arrastre) { arrastre = null; ponerAltura(alturaCercana(alturaPx)); } });
+window.addEventListener("pointercancel", () => { if (arrastre && !arrastre.tactil) { arrastre = null; animarHoja(alturaCercana(alturaPx), 260); } });
+// dentro de la lista: si está arriba del todo y se desliza hacia abajo, baja el panel; si el panel no está alto, primero sube el panel
+document.querySelectorAll(".cuerpo").forEach(c => {
+  let t = null;
+  c.addEventListener("touchstart", e => { if (lateral.matches || e.touches.length > 1 || document.body.classList.contains("escribiendo")) { t = null; return; }
+    t = { y: e.touches[0].clientY, activo: false }; }, { passive: true });
+  c.addEventListener("touchmove", e => {
+    if (!t) return;
+    const y = e.touches[0].clientY, dy = y - t.y, max = ALTA();
+    if (!t.activo) {
+      if (Math.abs(dy) < 7) return;
+      const bajar = dy > 0 && c.scrollTop <= 0, subir = dy < 0 && alturaPx < max - 2;
+      if (!bajar && !subir) { t = null; return; }
+      t.activo = true;
+      empezarArrastre(t.y);
+      arrastre.tactil = true;
+    }
+    e.preventDefault();
+    moverArrastre(y);
+    if (alturaPx >= max && dy < 0 && arrastre.h0 + (arrastre.y0 - y) > max + 30) { arrastre = null; t = null; animarHoja(max, 200); }   // ya arriba: sigue la lista
+  }, { passive: false });
+  const fin = () => { if (t && t.activo && arrastre) soltarArrastre(false); t = null; };
+  c.addEventListener("touchend", fin);
+  c.addEventListener("touchcancel", fin);
+});
 
 // ------------------------------------------------------------ por dónde pasa cada línea
 // Se cruza el recorrido grabado con las calles y lugares del mapa: calles en el orden en que las recorre
@@ -1180,6 +1232,9 @@ for (const c of PROPIOS.calles || []) {
   const fin = c.pts[c.pts.length - 1];
   LUG.calles.pts.push([fin[0], fin[1], i]);
 }
+// lugares que el Municipio marcó como que ya no existen o que corrigió: se sacan de la lista
+const ocultos = PROPIOS.ocultos || [];
+if (ocultos.length) LUG.lugares = LUG.lugares.filter(x => !ocultos.some(o => sinTildes(o.n) === sinTildes(x[0]) && metros(o.p, [x[2], x[3]]) < 60));
 for (const x of PROPIOS.lugares || []) if (x.n && x.p) LUG.lugares.unshift([x.n, x.tipo || "Lugar", x.p[0], x.p[1], x.alias || [], true]);
 const textoDist = m => m < 1000 ? num(Math.max(10, Math.round(m / 10) * 10), 0) + " m" : num(m / 1000, 1) + " km";
 const textoMin = x => Math.max(1, Math.round(x)) + " min";
