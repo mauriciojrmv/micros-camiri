@@ -18,7 +18,7 @@
     --navy: #0e2238; --navy-2: #173a5c; --oro: #e8b04a;
     --tinta: #14202e; --suave: #607080; --raya: rgba(20, 32, 46, .09); --fondo: #f3f5f8; --panel: #ffffff; --hover: rgba(20, 32, 46, .05);
     --sombra: 0 -12px 40px rgba(10, 25, 45, .20); --arriba: env(safe-area-inset-top, 0px); --abajo: env(safe-area-inset-bottom, 0px);
-    --barra: 52px; --h: 46vh; --nav: calc(64px + var(--abajo));
+    --barra: 58px; --h: 46vh; --nav: calc(64px + var(--abajo));
   }
   body[data-tema="oscuro"] { --tinta: #eaf0f7; --suave: #9db0c4; --raya: rgba(255, 255, 255, .10); --fondo: #1a2636; --panel: #101b2a; --hover: rgba(255, 255, 255, .07);
                              --sombra: 0 -12px 40px rgba(0, 0, 0, .55); }
@@ -61,18 +61,20 @@
   .yo { width: 18px; height: 18px; border-radius: 50%; background: #1a73e8; border: 3px solid #fff; box-shadow: 0 0 0 7px rgba(26, 115, 232, .22); }
 
   /* ----------------------------------------------------------------- barra */
-  .barra { position: fixed; z-index: 500; top: 0; left: 0; right: 0; height: calc(var(--barra) + var(--arriba)); padding: var(--arriba) 14px 0; display: flex; align-items: center; gap: 11px;
-           color: #fff; background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%); box-shadow: 0 6px 22px rgba(10, 25, 45, .28); }
-  .barra::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, var(--oro), rgba(232, 176, 74, 0) 70%); }
-  .barra img { width: 34px; height: 34px; object-fit: contain; background: #fff; border-radius: 10px; padding: 2px; flex: none; box-shadow: 0 3px 8px rgba(0, 0, 0, .22); }
+  /* el nombre de la app flota sobre el mapa, como una pastilla: el mapa usa toda la pantalla */
+  .barra { position: fixed; z-index: 500; top: calc(var(--arriba) + 10px); left: 12px; height: 46px; padding: 0 16px 0 6px; display: flex; align-items: center; gap: 9px;
+           max-width: calc(100vw - 150px); border-radius: 23px; color: var(--tinta); background: var(--panel); box-shadow: 0 4px 16px rgba(10, 25, 45, .2); cursor: pointer; }
+  .barra:active { transform: scale(.98); }
+  .barra img { width: 34px; height: 34px; object-fit: contain; background: #fff; border-radius: 50%; padding: 3px; flex: none; box-shadow: 0 0 0 1px var(--raya), 0 0 0 rgba(0, 0, 0, .22); }
   .barra div { min-width: 0; flex: 1; }
-  .barra small { display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--oro); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .barra h1 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; }
+  .barra small { display: block; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #a87a1c; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .barra h1 { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; line-height: 1.15; }
   #b-instalar { display: none !important; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; background: var(--oro); color: #1c1400; font-weight: 800; font-size: 12.5px; }
   #b-instalar svg { width: 16px; height: 16px; }
 
   /* ---------------------------------------------------------- botones flotantes */
-  .fabs { position: fixed; z-index: 450; right: 12px; bottom: calc(var(--nav) + 14px); display: flex; flex-direction: row; gap: 8px; will-change: transform; transition: transform .34s cubic-bezier(.2, .8, .2, 1), opacity .25s ease; }
+  .fabs { display: none !important; }
+  .fabs-viejo { position: fixed; z-index: 450; right: 12px; bottom: calc(var(--nav) + 14px); display: flex; flex-direction: row; gap: 8px; will-change: transform; transition: transform .34s cubic-bezier(.2, .8, .2, 1), opacity .25s ease; }
   body.arrastrando .fabs { transition: none; }
   body.hoja-llena .fabs { opacity: 0; pointer-events: none; }
   #b-capa { display: none !important; }
@@ -95,7 +97,7 @@
   body.ver-desde #c-desde { display: block !important; }
   body.ver-desde .campos { padding-right: 0; }
   /* cambiar entre mapa y foto satelital */
-  .b-vista { position: fixed; z-index: 450; right: 12px; top: calc(var(--barra) + var(--arriba) + 12px); height: 40px; padding: 0 13px 0 10px; border-radius: 20px;
+  .b-vista { position: fixed; z-index: 450; right: 12px; top: calc(var(--arriba) + 13px); height: 40px; padding: 0 13px 0 10px; border-radius: 20px;
              display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; background: var(--panel); color: var(--tinta); box-shadow: 0 4px 14px rgba(10, 25, 45, .22); }
   .b-vista svg { width: 18px; height: 18px; }
   body.eligiendo .b-vista { display: none; }
@@ -110,7 +112,7 @@
                 transition: transform .34s cubic-bezier(.2, .8, .2, 1), opacity .25s ease; }
   .fab-centro svg { width: 24px; height: 24px; }
   .fab-centro.activo { color: #1a73e8; }
-  body[data-pestana="lineas"] .fab-centro { bottom: calc(var(--nav) + 14px + 60px); }
+
   body.hoja-llena .fab-centro { opacity: 0; pointer-events: none; }
   body.arrastrando .fab-centro { transition: none; }
   body.eligiendo .fab-centro { display: grid; transform: none !important; bottom: calc(190px + var(--abajo)); opacity: 1; pointer-events: auto; }
@@ -122,6 +124,9 @@
   .cab { flex: none; padding: 4px 16px 10px; touch-action: none; }
   .cab-fila { display: flex; align-items: baseline; gap: 10px; }
   .cab h2 { margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -.02em; flex: 1; }
+  .chip-cerca { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px 0 10px; border-radius: 17px; background: var(--fondo); font-size: 13px; font-weight: 800; white-space: nowrap; }
+  .chip-cerca svg { width: 16px; height: 16px; }
+  .chip-cerca.activo { background: rgba(26, 115, 232, .12); color: #1a73e8; }
   .cab .sub { font-size: 12.5px; color: var(--suave); font-weight: 600; white-space: nowrap; }
   .buscar { position: relative; margin-top: 10px; }
   .buscar svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--suave); width: 18px; height: 18px; }
@@ -140,6 +145,7 @@
           background: var(--c); box-shadow: 0 7px 16px rgba(10, 25, 45, .18);   /* respaldo para celulares con navegador antiguo */
           background: linear-gradient(150deg, color-mix(in srgb, var(--c) 74%, #fff), var(--c) 65%); box-shadow: 0 7px 16px color-mix(in srgb, var(--c) 38%, transparent); }
   .l-txt { min-width: 0; }
+  .fav-mini { color: #e8b04a; font-size: .9em; }
   .l-nombre { font-weight: 800; font-size: 17.5px; }
   .l-sub { font-size: 14.5px; color: var(--suave); font-weight: 600; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .l-cerca { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: var(--fondo); color: var(--tinta); background: color-mix(in srgb, var(--c) 15%, transparent); color: color-mix(in srgb, var(--c) 72%, var(--tinta)); }
@@ -155,6 +161,9 @@
   .f-cab h2 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .f-cab p { margin: 1px 0 0; font-size: 12.5px; color: var(--suave); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .f-cab > div { min-width: 0; flex: 1; }
+  .estrella { flex: none; width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; background: var(--fondo); }
+  .estrella svg { width: 21px; height: 21px; fill: none; stroke: var(--suave); stroke-width: 1.8; stroke-linejoin: round; }
+  .estrella.activa svg { fill: #e8b04a; stroke: #e8b04a; }
   .insignia { flex: none; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 99px; background: var(--fondo); color: var(--tinta); background: color-mix(in srgb, var(--c) 15%, transparent); color: color-mix(in srgb, var(--c) 72%, var(--tinta)); white-space: nowrap; }
   .cifras { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 2px 4px 14px; }
   .cifras div { padding: 12px 12px 11px; border-radius: 16px; background: var(--fondo); }
@@ -341,6 +350,13 @@
   .b-caja li { display: flex; gap: 14px; align-items: center; font-size: 16.5px; line-height: 1.35; }
   .b-caja li b { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--oro); color: #1c1400; font-size: 18px; }
   .b-caja .boton { width: 100%; font-size: 17px; }
+  .acerca-cab { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .acerca-cab img { width: 52px; height: 52px; border-radius: 16px; background: #fff; padding: 4px; box-shadow: 0 0 0 1px var(--raya); }
+  .acerca-cab b { display: block; font-size: 20px; font-weight: 800; }
+  .acerca-cab span { display: block; font-size: 13px; color: var(--suave); font-weight: 700; }
+  .acerca dl { margin: 0 0 16px; display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 14px; line-height: 1.4; }
+  .acerca dt { font-weight: 800; color: var(--suave); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
+  .acerca dd { margin: 0; font-weight: 600; }
   @media (min-width: 760px) { .bienvenida { align-items: center; } }
   #aviso { position: fixed; z-index: 900; left: 50%; top: calc(var(--barra) + var(--arriba) + 12px); transform: translate(-50%, -14px); opacity: 0; pointer-events: none; max-width: min(88vw, 460px);
            padding: 11px 16px; border-radius: 14px; background: var(--navy); color: #fff; font-size: 13.5px; font-weight: 700; transition: all .3s ease; text-align: center; box-shadow: 0 10px 26px rgba(0, 0, 0, .28); }
@@ -365,7 +381,7 @@
     .cab, .f-cab { padding-top: 16px; touch-action: auto; }
     .fabs { bottom: 26px; right: 14px; transform: none !important; }
     .fab-centro { transform: none !important; bottom: 26px !important; right: 14px; }
-    body[data-pestana="lineas"] .fab-centro { bottom: 86px !important; }
+
     body.hoja-llena .fabs { opacity: 1; pointer-events: auto; }
   }
   @media (max-height: 460px) { :root { --barra: 50px; } .barra img { width: 34px; height: 34px; } .cifras b { font-size: 21px; } .linea { padding: 7px 8px; } .chip { width: 40px; height: 40px; font-size: 16px; } .linea { grid-template-columns: 40px 1fr auto 16px; } }
@@ -376,7 +392,7 @@
 <body data-tema="claro">
 <div id="mapa"></div>
 
-<header class="barra">
+<header class="barra" id="barra" role="button" aria-label="Acerca de la aplicación">
   <img src="icono-192.png" alt="">
   <div><small id="t-entidad">Municipio de Camiri</small><h1>Micros de Camiri</h1></div>
   <button id="b-instalar"><svg class="i" viewBox="0 0 24 24"><path d="M12 4v11M7.500 11l4.500 4.500 4.500-4.500M5 20h14"/></svg>Instalar</button>
@@ -412,7 +428,8 @@
 
   <div class="vista" id="vista-lista">
     <div class="cab arrastre">
-      <div class="cab-fila"><h2>Líneas de micro</h2><span class="sub" id="l-sub"></span></div>
+      <div class="cab-fila"><h2>Líneas de micro</h2><span class="sub" id="l-sub" hidden></span>
+        <button class="chip-cerca" id="b-cerca"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.500"/><circle cx="12" cy="12" r="1.800"/><path d="M12 2.500v3M12 18.500v3M2.500 12h3M18.500 12h3"/></svg>Cerca de mí</button></div>
       <label class="buscar"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.500"/><path d="M20 20l-4.200-4.200"/></svg>
         <input id="buscar" type="search" placeholder="Número, barrio, calle o lugar" autocomplete="off" enterkeyhint="search" aria-label="Buscar línea o barrio"></label>
     </div>
@@ -425,6 +442,7 @@
       <span class="chip" id="f-chip"></span>
       <div><h2 id="f-titulo"></h2><p id="f-sub"></p></div>
       <span class="insignia" id="f-tipo"></span>
+      <button class="estrella" id="b-fav" aria-label="Marcar como favorita"><svg viewBox="0 0 24 24"><path d="M12 3.500l2.600 5.300 5.900.900-4.300 4.100 1 5.800L12 16.800l-5.200 2.800 1-5.800-4.300-4.100 5.900-.900z"/></svg></button>
     </div>
     <div class="cuerpo" id="ficha"></div>
   </div>
@@ -471,11 +489,25 @@
   <button class="boton" id="i-instalar">Instalar</button>
   <button class="x" id="i-cerrar" aria-label="Ahora no"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 </div>
+<div class="bienvenida" id="acerca" role="dialog" aria-label="Acerca de la aplicación">
+  <div class="b-caja acerca">
+    <div class="acerca-cab"><img src="icono-192.png" alt=""><div><b>Micros de Camiri</b><span id="acerca-entidad">Municipio de Camiri</span></div></div>
+    <dl>
+      <dt>Rutas</dt><dd>Medidas con GPS en recorridos reales de cada línea.</dd>
+      <dt>Datos al</dt><dd id="acerca-fecha">—</dd>
+      <dt>Mapa</dt><dd>&copy; colaboradores de OpenStreetMap (licencia ODbL).</dd>
+      <dt>Funciona</dt><dd>Gratis y sin registrarse. Después de abrirla una vez, sirve aunque haya poca señal.</dd>
+      <dt>Versión</dt><dd id="acerca-version">—</dd>
+    </dl>
+    <div class="acciones"><button class="boton claro" id="b-guia">Cómo se usa</button><button class="boton" id="b-acerca-ok">Cerrar</button></div>
+  </div>
+</div>
 <div id="aviso" role="status"></div>
 <div id="entrada"><div><img src="icono-192.png" alt=""><b>Micros de Camiri</b><span>Municipio de Camiri</span></div></div>
 
 <script src="rutas_datos.js" onerror="void 0"></script>
 <script src="lugares.js" onerror="void 0"></script>
+<script src="lugares_propios.js" onerror="void 0"></script>
 <script src="mapa_base.js" onerror="void 0"></script>
 <script>
 const CAMIRI = [-20.04, -63.52];
@@ -835,6 +867,17 @@ function analizarLinea(l) {
   setTimeout(() => { analizarLinea(lineas[i]); (window.requestIdleCallback || setTimeout)(sig); }, i ? 0 : 1500);
 })();
 
+// ------------------------------------------------------------------ favoritas
+const FAVORITAS = "micros-favoritas";
+const leerFavoritas = () => { try { return JSON.parse(localStorage.getItem(FAVORITAS)) || []; } catch (e) { return []; } };
+function alternarFavorita(l) {
+  const f = leerFavoritas(), ya = f.includes(l.nombre), nueva = ya ? f.filter(x => x !== l.nombre) : [...f, l.nombre];
+  try { localStorage.setItem(FAVORITAS, JSON.stringify(nueva)); } catch (e) { /* modo privado */ }
+  $("b-fav").classList.toggle("activa", !ya);
+  avisar(ya ? l.titulo + " ya no es favorita." : l.titulo + " quedó en favoritas: sale primero en la lista.");
+  pintarLista();
+}
+
 // ------------------------------------------------------------------ lista
 function metrosA(l) {                      // distancia de mi ubicación al punto más cercano de la línea
   if (!miPunto) return null;
@@ -845,8 +888,11 @@ function metrosA(l) {                      // distancia de mi ubicación al punt
 function pintarLista() {
   const texto = sinTildes($("buscar").value.trim()), caja = $("lista");
   let lista = lineas.filter(l => !texto || l.busca.includes(texto) || (l.buscaExtra && texto.length >= 3 && l.buscaExtra.includes(texto)));
-  if (miPunto) lista = lista.map(l => ({ l, d: metrosA(l) })).sort((a, b) => a.d - b.d).map(x => Object.assign(x.l, { cerca: x.d }));
+  if (miPunto) lista = lista.map(l => ({ l, d: metrosA(l) })).sort((a, b) => a.d - b.d).map(x => Object.assign(x.l, { distancia: x.d }));   // "distancia": cuánto pasa de mí (l.cerca son los lugares cerca de su ruta)
   $("l-sub").textContent = miPunto ? "Ordenadas por cercanía" : datos.salida ? "Salen de " + datos.salida : lineas.length + " líneas";
+  $("b-cerca").classList.toggle("activo", !!miPunto);
+  const favs = leerFavoritas();
+  lista = [...lista.filter(l => favs.includes(l.nombre)), ...lista.filter(l => !favs.includes(l.nombre))];   // las favoritas primero
   caja.innerHTML = "";
   if (!lineas.length) { caja.innerHTML = '<div class="vacio">Todavía no hay rutas publicadas.</div>'; return; }
   if (!lista.length) { caja.innerHTML = '<div class="vacio">Ninguna línea coincide con esa búsqueda.</div>'; return; }
@@ -859,12 +905,13 @@ function pintarLista() {
       <span class="l-km tabular">${num(l.km, 1)} km<small>${l.min ? num(l.min, 0) + " min" : ""}</small></span>${FLECHA}`;
     b.querySelector(".chip").textContent = l.numero;
     b.querySelector(".l-nombre").textContent = l.titulo;
+    if (favs.includes(l.nombre)) b.querySelector(".l-nombre").insertAdjacentHTML("beforeend", ' <span class="fav-mini" aria-label="favorita">★</span>');
     const porQue = texto && !l.busca.includes(texto) && l.calles ? [...l.calles, ...l.cerca.map(x => x.n)].find(n => sinTildes(n).includes(texto)) : null;
     b.querySelector(".l-sub").textContent = porQue ? "Pasa por " + porQue : l.destino ? "Va a " + l.destino : l.tipo;
-    if (miPunto && l.cerca != null && l.cerca < 5000) {
+    if (miPunto && l.distancia != null && l.distancia < 5000) {
       const c = document.createElement("span");
       c.className = "l-cerca";
-      c.textContent = l.cerca < 1000 ? `Pasa a ${num(l.cerca, 0)} m` : `Pasa a ${num(l.cerca / 1000, 1)} km`;
+      c.textContent = l.distancia < 1000 ? `Pasa a ${num(l.distancia, 0)} m` : `Pasa a ${num(l.distancia / 1000, 1)} km`;
       b.querySelector(".l-txt").appendChild(c);
     }
     b.addEventListener("click", () => elegir(l.nombre));
@@ -874,6 +921,8 @@ function pintarLista() {
 
 // ------------------------------------------------------------------ ficha
 function pintarFicha(l) {
+  $("b-fav").classList.toggle("activa", leerFavoritas().includes(l.nombre));
+  $("b-fav").onclick = () => alternarFavorita(l);
   $("f-chip").textContent = l.numero;
   $("f-chip").style.setProperty("--c", l.color);
   $("f-titulo").textContent = l.titulo;
@@ -913,7 +962,7 @@ function pintarFicha(l) {
   caja.querySelectorAll(".boton.ir span").forEach((e, i) => { e.textContent = dos ? "Ir a " + (paradasDe(l)[i].zona || (i ? "la parada de regreso" : "la parada")) : "Ir a la parada"; });
   caja.querySelectorAll(".boton.ir").forEach(b => b.addEventListener("click", () => {
     const q = paradasDe(l)[+b.dataset.i];
-    irAlLugar({ n: nombreParada(q) + " · " + l.titulo, sub: "Parada", p: q.p });
+    irAlLugar({ n: nombreParada(q) + " · " + l.titulo, sub: "Parada", p: q.p, parada: true });
   }));
   // por dónde pasa y qué hay cerca
   analizarLinea(l);
@@ -1118,6 +1167,20 @@ function activarBrujula() {                      // se llama desde un toque: el 
 }
 const LUG = window.LUGARES_CAMIRI || { lugares: [], calles: { nombres: [], pts: [] } };
 const metros = (a, b) => { const dy = (a[0] - b[0]) * 111320, dx = (a[1] - b[1]) * 111320 * Math.cos(a[0] * Math.PI / 180); return Math.hypot(dx, dy); };
+// Lugares y calles cargados por el Municipio con el editor (lugares_propios.js): van primero y se buscan también por sus otros nombres.
+const PROPIOS = window.LUGARES_PROPIOS || { lugares: [], calles: [] };
+for (const c of PROPIOS.calles || []) {
+  if (!c.n || !c.pts || c.pts.length < 2) continue;
+  let i = LUG.calles.nombres.indexOf(c.n);
+  if (i < 0) { i = LUG.calles.nombres.length; LUG.calles.nombres.push(c.n); }
+  // los puntos de la calle propia reemplazan a los de OpenStreetMap que estén encima (para corregir nombres)
+  LUG.calles.pts = LUG.calles.pts.filter(q => !c.pts.some(r => metros(q, r) < 12));
+  let ult = null;
+  for (const q of c.pts) if (!ult || metros(ult, q) >= 40) { LUG.calles.pts.push([q[0], q[1], i]); ult = q; }
+  const fin = c.pts[c.pts.length - 1];
+  LUG.calles.pts.push([fin[0], fin[1], i]);
+}
+for (const x of PROPIOS.lugares || []) if (x.n && x.p) LUG.lugares.unshift([x.n, x.tipo || "Lugar", x.p[0], x.p[1], x.alias || [], true]);
 const textoDist = m => m < 1000 ? num(Math.max(10, Math.round(m / 10) * 10), 0) + " m" : num(m / 1000, 1) + " km";
 const textoMin = x => Math.max(1, Math.round(x)) + " min";
 const ICONO = {
@@ -1137,7 +1200,7 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 const calleRep = new Map();               // nombre de calle -> un punto representativo (el del medio)
 LUG.calles.nombres.forEach((n, i) => { const suyos = LUG.calles.pts.filter(q => q[2] === i); if (suyos.length) calleRep.set(n, suyos[Math.floor(suyos.length / 2)]); });
 const indice = [
-  ...LUG.lugares.map(([n, t, a, b]) => ({ n, sub: t, p: [a, b], tipo: "lugar" })),
+  ...LUG.lugares.map(([n, t, a, b, alias, propio]) => ({ n, sub: t, p: [a, b], tipo: "lugar", alias: (alias || []).join(" "), propio: !!propio })),
   ...[...calleRep].map(([n, q]) => ({ n, sub: "Calle", p: [q[0], q[1]], tipo: "calle" })),
   ...lineas.filter(l => l.destino).map(l => {
     const t = l.orden[0];
@@ -1146,7 +1209,7 @@ const indice = [
     for (let i = 1; i < t.pts.length && largo < total / 2; i++) { largo += metros(t.pts[i - 1], t.pts[i]); mitad = t.pts[i]; }
     return { n: l.destino, sub: "Final de la " + l.titulo, p: (l.ida && l.ida.pts[l.ida.pts.length - 1]) || mitad, tipo: "lugar" };
   }),
-].map(x => Object.assign(x, { busca: sinTildes(x.n + " " + x.sub) }));
+].map(x => Object.assign(x, { busca: sinTildes(x.n + " " + x.sub + " " + (x.alias || "")) }));
 function buscarLugares(texto) {
   const t = sinTildes(texto.trim());
   if (!t) return [];
@@ -1154,8 +1217,38 @@ function buscarLugares(texto) {
   return indice.map(x => {
     if (!palabras.every(w => x.busca.includes(w))) return null;
     const n = sinTildes(x.n);
-    return { x, puntos: (n.startsWith(t) ? 4 : 0) + (n.split(/\s+/).some(w => w.startsWith(palabras[0])) ? 2 : 0) + (x.tipo === "lugar" ? 1 : 0) - n.length / 200 };
+    return { x, puntos: (n.startsWith(t) ? 4 : 0) + (n.split(/\s+/).some(w => w.startsWith(palabras[0])) ? 2 : 0) + (x.tipo === "lugar" ? 1 : 0) + (x.propio ? 3 : 0) - n.length / 200 };
   }).filter(Boolean).sort((a, b) => b.puntos - a.puntos).slice(0, 12).map(r => r.x);
+}
+// Esquinas: "Comercio y Sucre" -> el cruce de esas dos calles (puntos que comparten en el mapa).
+let esquinas = null;
+function armarEsquinas() {
+  esquinas = [];
+  if (!BASE) return;
+  const por = new Map();
+  const nombreDe = new Map(LUG.calles.nombres.map(n => [n, n]));
+  for (const v of BASE.vias) {
+    if (!v.n) continue;
+    for (const q of v.p) { const k = q[0].toFixed(5) + "," + q[1].toFixed(5); if (!por.has(k)) por.set(k, new Set()); por.get(k).add(v.n); }
+  }
+  const vistas = new Set();
+  for (const [k, ns] of por) {
+    if (ns.size < 2) continue;
+    const lista = [...ns].sort(), [la, lo] = k.split(",").map(Number);
+    for (let i = 0; i < lista.length; i++) for (let j = i + 1; j < lista.length; j++) {
+      const clave = lista[i] + "|" + lista[j];
+      if (vistas.has(clave)) continue;
+      vistas.add(clave);
+      esquinas.push({ a: nombreDe.get(lista[i]) || lista[i], b: lista[j], p: [la, lo], ba: sinTildes(lista[i]), bb: sinTildes(lista[j]) });
+    }
+  }
+}
+function buscarEsquinas(texto) {
+  const partes = sinTildes(texto).replace(/^esquina\s+/, "").split(/\s+(?:y|con|esquina)\s+/).map(x => x.trim()).filter(x => x.length >= 3);
+  if (partes.length !== 2) return [];
+  if (!esquinas) armarEsquinas();
+  return esquinas.filter(e => (e.ba.includes(partes[0]) && e.bb.includes(partes[1])) || (e.ba.includes(partes[1]) && e.bb.includes(partes[0])))
+    .slice(0, 5).map(e => ({ n: e.a + " y " + e.b, sub: "Esquina", p: e.p, tipo: "calle" }));
 }
 function calleCerca(p, max = 90) {
   let mejor = null, d = max;
@@ -1208,7 +1301,7 @@ function pintarSugerencias() {
   const elegirLugar = x => () => { ponerPunto(campo, { n: x.n, sub: x.sub, p: x.p }); };
   const escrito = texto && !(viaje[campo] && texto === viaje[campo].n);
   if (escrito) {
-    const r = buscarLugares(texto);
+    const r = [...buscarEsquinas(texto), ...buscarLugares(texto)];
     r.forEach(x => caja.appendChild(fila(x.tipo === "calle" ? ICONO.calle : ICONO.lugar, x.n, x.sub, elegirLugar(x))));
     if (!r.length) caja.insertAdjacentHTML("beforeend", '<div class="vacio">No se encontró ese lugar. Pruebe con otro nombre, o márquelo en el mapa.</div>');
     caja.appendChild(fila(ICONO.mapa, "Marcar en el mapa", "Mueva el mapa hasta el lugar", () => abrirElegir(campo)));
@@ -1242,9 +1335,9 @@ function pintarSugerencias() {
 }
 let categoria = null;
 const CATEGORIAS = [
-  ["Salud", /Hospital|salud|Consultorio|Dentista/i], ["Mercados", /Mercado|Supermercado|Comercio/i], ["Educación", /Colegio|Universidad|Kínder|Instituto|Facultad/i],
-  ["Plazas y parques", /Parque|Plaza|Estadio|Polideportivo/i], ["Iglesias", /Iglesia/i], ["Farmacias", /Farmacia/i],
-  ["Instituciones", /Edificio público|Alcaldía|Policía|Correo|Banco|Juzgado|Bomberos|Terminal|Biblioteca/i], ["Hoteles", /Hotel/i],
+  ["Salud", /Hospital|salud|Consultorio|Dentista/i], ["Mercados", /Mercado|Supermercado|Comercio/i], ["Educación", /Colegio|Universidad|Kínder|Instituto|Facultad|Educaci/i],
+  ["Transporte", /Terminal|Transporte|Parada/i], ["Plazas y parques", /Parque|Plaza|Estadio|Polideportivo|Deporte/i], ["Iglesias", /Iglesia/i],
+  ["Instituciones", /Edificio público|Alcaldía|Policía|Correo|Banco|Juzgado|Bomberos|Biblioteca|Instituci/i], ["Farmacias", /Farmacia/i], ["Hoteles", /Hotel/i],
 ];
 function deCategoria(nombre) {
   const re = (CATEGORIAS.find(c => c[0] === nombre) || [])[1];
@@ -1520,7 +1613,9 @@ function planificar(o, d) {
   const mejorTotal = Math.min(...opciones.map(op => op.total));
   opciones = opciones.filter(op => op.total <= mejorTotal * 1.6 + 5 && op.caminar <= MAX_PIE * 2).slice(0, 3);   // fuera las que, caminando de verdad, quedan muy atrás
   const aPie = afinar(detallar({ total: minPie(metros(o, d)), tramos: [], aPie: true }, o, d));
-  if (aPie.total <= 12) opciones = [aPie, ...opciones.filter(op => op.total < aPie.total - 3)].slice(0, 3);   // cerca: a pie, salvo que el micro ahorre bastante
+  const haciaParada = viaje.hasta && viaje.hasta.parada;          // a una parada de micro se llega caminando, salvo que quede lejos
+  if (haciaParada && aPie.total <= 25) opciones = [aPie, ...opciones.filter(op => op.total < aPie.total - 8)].slice(0, 3);
+  else if (aPie.total <= 12) opciones = [aPie, ...opciones.filter(op => op.total < aPie.total - 3)].slice(0, 3);   // cerca: a pie, salvo que el micro ahorre bastante
   else if (opciones.length && aPie.total < Math.min(...opciones.map(op => op.total))) opciones = [...opciones.slice(0, 2), aPie];   // caminando se llega antes
   return opciones;
 }
@@ -1826,6 +1921,7 @@ $("b-capa").addEventListener("click", () => {
   mapa.removeLayer(aSatelite ? calles : satelite);
   (aSatelite ? satelite : calles).addTo(mapa);
 });
+$("b-cerca").addEventListener("click", () => $("b-ubicacion").click());
 $("b-ubicacion").addEventListener("click", () => {
   activarBrujula();
   avisar("Buscando su ubicación...");
@@ -1883,6 +1979,15 @@ setTimeout(() => { mapa.invalidateSize(); reencuadrar(false); $("entrada").class
 let yaVio = false;
 try { yaVio = localStorage.getItem("micros-guia-vista") === "si"; } catch (e) { /* modo privado */ }
 if (!yaVio && lineas.length) setTimeout(() => $("bienvenida").classList.add("ver"), 900);
+$("barra").addEventListener("click", () => {
+  $("acerca-entidad").textContent = datos.entidad || "Municipio de Camiri";
+  $("acerca-fecha").textContent = datos.generado ? new Date(datos.generado).toLocaleDateString("es-BO", { day: "numeric", month: "long", year: "numeric" }) : "—";
+  caches && caches.keys ? caches.keys().then(k => { $("acerca-version").textContent = (k.find(x => x.startsWith("micros-camiri")) || "").replace("micros-camiri-", "") || "—"; }) : null;
+  $("acerca").classList.add("ver");
+});
+$("b-acerca-ok").addEventListener("click", () => $("acerca").classList.remove("ver"));
+$("acerca").addEventListener("click", e => { if (e.target.id === "acerca") $("acerca").classList.remove("ver"); });
+$("b-guia").addEventListener("click", () => { $("acerca").classList.remove("ver"); $("bienvenida").classList.add("ver"); });
 $("b-entendido").addEventListener("click", () => {
   $("bienvenida").classList.remove("ver");
   try { localStorage.setItem("micros-guia-vista", "si"); } catch (e) { /* modo privado */ }
