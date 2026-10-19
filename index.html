@@ -33,7 +33,8 @@
   svg.i { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
   /* ------------------------------------------------------------------ mapa */
-  #mapa { position: fixed; inset: 0; z-index: 0; background: #f2eee5; }
+  #marco-mapa { position: fixed; inset: 0; z-index: 0; overflow: hidden; contain: strict; }
+  #mapa { position: absolute; inset: 0; background: #f2eee5; }
   /* el mapa queda claro también en modo oscuro: es una imagen, no se le aplican filtros */
   /* mapa propio: calles, ríos y nombres dibujados con datos de OpenStreetMap, sin pedir nada a otro servidor */
   .leaflet-base-pane, .leaflet-rotulos-pane { pointer-events: none; }
@@ -69,8 +70,13 @@
   .barra div { min-width: 0; flex: 1; }
   .barra small { display: block; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #a87a1c; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .barra h1 { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; line-height: 1.15; }
-  #b-instalar { display: none !important; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; background: var(--oro); color: #1c1400; font-weight: 800; font-size: 12.5px; }
+  #b-instalar { display: none; flex: none; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; background: var(--oro); color: #1c1400; font-weight: 800; font-size: 12.5px; }
   #b-instalar svg { width: 16px; height: 16px; }
+  body.puede-instalar #b-instalar { display: inline-flex; }
+  body.puede-instalar .barra { padding-right: 6px; max-width: calc(100vw - 80px); }
+  body.puede-instalar #b-vista-txt { display: none; }
+  @media (max-width: 345px) { body.puede-instalar #b-instalar { font-size: 0; gap: 0; padding: 0 9px; } }   /* celulares muy angostos: solo la flecha */             /* con Instalar arriba, Satélite queda solo con su ícono */
+  body.puede-instalar .b-vista { width: 44px; height: 44px; padding: 0; justify-content: center; top: calc(var(--arriba) + 11px); }
 
   /* ---------------------------------------------------------- botones flotantes */
   .fabs { display: none !important; }
@@ -112,6 +118,17 @@
                 transition: transform .34s cubic-bezier(.2, .8, .2, 1), opacity .25s ease; }
   .fab-centro svg { width: 24px; height: 24px; }
   .fab-centro.activo { color: #1a73e8; }
+  .fab-centro .navegar, body.giro .fab-centro .mira-ic { display: none; }
+  body.giro .fab-centro .navegar { display: block; }
+  /* modo brújula: el mapa (más grande que la pantalla, para que no queden esquinas vacías) gira alrededor de mi ubicación */
+  body.giro #mapa { transition: transform .35s ease-out; transform-origin: 50% 50%; }
+  body.giro .leaflet-marker-icon > :not(.yo-caja):not(.rb) { transform-origin: 0 0; rotate: var(--contra, 0deg); }   /* los carteles siguen derechos */
+  body.giro .leaflet-control-container { display: none; }
+  .b-brujula { position: fixed; z-index: 450; right: 12px; top: calc(var(--arriba) + 62px); width: 44px; height: 44px; border-radius: 50%; display: none; place-items: center;
+               background: var(--panel); box-shadow: 0 4px 14px rgba(10, 25, 45, .22); }
+  body.giro .b-brujula { display: grid; }
+  .b-brujula svg { width: 30px; height: 30px; transition: transform .35s ease-out; }
+  body.eligiendo .b-brujula { display: none; }
 
   body.hoja-llena .fab-centro { opacity: 0; pointer-events: none; }
   body.arrastrando .fab-centro { transition: none; }
@@ -478,7 +495,7 @@
 </style>
 </head>
 <body data-tema="claro">
-<div id="mapa"></div>
+<div id="marco-mapa"><div id="mapa"></div></div>
 
 <header class="barra" id="barra" role="button" aria-label="Acerca de la aplicación">
   <img src="icono-192.png" alt="">
@@ -539,7 +556,10 @@
 <button class="b-vista" id="b-vista" aria-label="Cambiar entre mapa y foto satelital">
   <svg class="i" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg><span id="b-vista-txt">Satélite</span></button>
 <button class="fab-centro" id="b-centrar" aria-label="Centrar el mapa en mi ubicación" title="Mi ubicación">
-  <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.500"/><circle cx="12" cy="12" r="2.200" fill="currentColor"/><path d="M12 2.500v3M12 18.500v3M2.500 12h3M18.500 12h3"/></svg></button>
+  <svg class="i mira-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.500"/><circle cx="12" cy="12" r="2.200" fill="currentColor"/><path d="M12 2.500v3M12 18.500v3M2.500 12h3M18.500 12h3"/></svg>
+  <svg class="i navegar" viewBox="0 0 24 24"><path d="M12 3l7 18-7-4-7 4 7-18z" fill="currentColor"/></svg></button>
+<button class="b-brujula" id="b-brujula" aria-label="Volver a poner el norte arriba" title="Norte arriba">
+  <svg viewBox="0 0 30 30" id="brujula-aguja"><path d="M15 3l4.500 12h-9z" fill="#e5484d"/><path d="M15 27l-4.500-12h9z" fill="#aab4bf"/><text x="15" y="12.300" text-anchor="middle" font-size="6" font-weight="800" fill="#fff">N</text></svg></button>
 <nav class="nav" id="nav">
   <button data-p="ir" class="activa"><span><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.500"/><circle cx="18" cy="6" r="2.500"/><path d="M8.500 18H15a3.500 3.500 0 0 0 0-7H9a3.500 3.500 0 0 1 0-7h6.500"/></svg></span>Ir a un lugar</button>
   <button data-p="lineas"><span><svg class="i" viewBox="0 0 24 24"><rect x="5" y="3.500" width="14" height="14" rx="3"/><path d="M5 11h14M8 20.500l1.500-3M16 20.500l-1.500-3"/><circle cx="8.500" cy="14.300" r=".8"/><circle cx="15.500" cy="14.300" r=".8"/></svg></span>Líneas</button>
@@ -627,7 +647,7 @@ const lateral = window.matchMedia("(min-width: 760px), (orientation: landscape) 
 const calmo = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const FLECHA = '<svg class="i" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
 
-let seleccion = null, marcaYo = null, miPunto = null, ficha = 0, pestana = "ir";
+let seleccion = null, marcaYo = null, miPunto = null, ficha = 0, pestana = "ir", girando = false, relojGiro = null;
 
 // ------------------------------------------------------------------ datos
 const grupos = new Map();
@@ -741,6 +761,7 @@ function rotulosBase() {
     e.className = "rb " + clase;
     e.textContent = nombre;
     e.style.transform = `translate(-50%, -50%) rotate(${giro}deg)`;
+    if (giro) e.dataset.g = giro;
   };
   for (const l of BASE.lugares) {
     if (l.t === "city" || l.t === "town") continue;              // el nombre de la ciudad ya está arriba, en el encabezado
@@ -765,6 +786,7 @@ function rotulosBase() {
     ocupar(pt, v.n, 6.4, giro);
     poner(q, v.n, v.c === 9 ? "agua" : "", giro);
   }
+  if (girando) enderezarRotulos();
 }
 mapa.on("zoomend", () => { grosorBase(); rotulosBase(); });
 mapa.on("moveend", rotulosBase);
@@ -887,6 +909,7 @@ function ponerAltura(px, sinMover = false) {
   document.body.classList.remove("arrastrando");
   clearTimeout(relojOculto);                // al quedar quieto, la lista deja lugar abajo para poder verla entera
   relojOculto = setTimeout(() => hoja.style.setProperty("--oculto", (max - alturaPx) + "px"), 480);
+  if (girando) { clearTimeout(relojGiro); relojGiro = setTimeout(armarGiro, 380); }
 }
 const alturaInicio = () => MEDIA();                     // al abrir: el buscador y las categorías, con el mapa a la vista
 // Mientras se escribe, el panel queda justo encima del teclado y deja ver parte del mapa.
@@ -1202,6 +1225,7 @@ function trazar(l, turno) {
 function limpiarTrazo(el) { el.style.transition = ""; el.style.strokeDasharray = ""; el.style.strokeDashoffset = ""; }
 
 function reencuadrar(animado = true) {
+  if (girando) { salirGiro(true); if (siguiendo) dejarDeSeguir(); }
   if (pestana === "ir" && viaje.opcion) { encuadrar(puntosViaje(viaje.opcion), animado); return; }
   if (pestana === "ir" && miPunto && enCamiri(miPunto)) {          // sin viaje: el mapa en donde estoy (si ya se sabe), arriba del panel
     const z = Math.max(mapa.getZoom(), 15), corrido = mapa.unproject(mapa.project(miPunto, z).add([0, Math.min(alturaActual(), innerHeight * .5) / 2]), z);
@@ -1365,6 +1389,7 @@ function ponerRumbo(h, forzar = false) {
     cuadroRumbo = 0;
     const el = marcaYo && marcaYo.getElement() && marcaYo.getElement().firstChild;
     if (el) { el.classList.add("con-rumbo"); el.style.setProperty("--rumbo", rumbo + "deg"); }
+    if (girando) aplicarGiro();
   });
 }
 function alOrientar(e) {
@@ -1629,6 +1654,7 @@ function ponerPunto(campo, x) {
 // ---- elegir un punto moviendo el mapa
 let eligiendo = null;
 function abrirElegir(campo) {
+  salirGiro(true);
   eligiendo = campo;
   document.activeElement && document.activeElement.blur();
   $("elegir-titulo").textContent = campo === "casa" ? "Mueva el mapa hasta su casa" : campo === "trabajo" ? "Mueva el mapa hasta su trabajo"
@@ -1695,7 +1721,97 @@ function afinarUbicacion() {
   }, () => {}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
 }
 function dejarDeVigilar() { if (vigilando !== null) navigator.geolocation.clearWatch(vigilando); vigilando = null; }
-function dejarDeSeguir() { siguiendo = false; $("b-centrar").classList.remove("activo"); }
+function dejarDeSeguir() { siguiendo = false; $("b-centrar").classList.remove("activo"); salirGiro(); }
+
+// ---- modo brújula (código propio). El mapa solo gira mientras sigue mi ubicación: así nunca hay que arrastrarlo girado.
+// Para girar, el mapa se agranda a un cuadrado centrado en mi punto y se gira con CSS; los carteles se giran al revés.
+const mapaEl = $("mapa");
+let giroMapa = 0, pivote = null;
+function pivoteGiro() {                       // dónde queda mi punto en la pantalla: arriba del panel, un poco más abajo del medio
+  if (lateral.matches) { const r = $("hoja").getBoundingClientRect().right; return { x: Math.round((r + innerWidth) / 2), y: Math.round(innerHeight * .6) }; }
+  const arriba = 64, abajo = innerHeight - alturaActual() - altoNav();
+  return { x: Math.round(innerWidth / 2), y: Math.round(arriba + Math.max(80, abajo - arriba) * .62) };
+}
+function armarGiro() {
+  if (!girando) return;
+  const c = pivoteGiro(), W = innerWidth, H = innerHeight;
+  const D = Math.ceil(2 * Math.max(Math.hypot(c.x, c.y), Math.hypot(W - c.x, c.y), Math.hypot(c.x, H - c.y), Math.hypot(W - c.x, H - c.y))) + 4;
+  const centro = ultimaUbic ? ultimaUbic.p : mapa.getCenter();
+  pivote = c;
+  Object.assign(mapaEl.style, { transition: "none", inset: "auto", left: (c.x - D / 2) + "px", top: (c.y - D / 2) + "px", width: D + "px", height: D + "px" });
+  mapa.invalidateSize({ pan: false });               // el tamaño cambia de golpe, sin animación (si no, el mapa mide mal)
+  mapaEl.style.transition = "";
+  mapa.setView(centro, mapa.getZoom(), { animate: false });
+}
+const normal180 = a => ((a % 360) + 540) % 360 - 180;
+function aplicarGiro() {
+  if (!girando || rumbo === null) return;
+  giroMapa += normal180(-rumbo - giroMapa);            // por el camino más corto (de 350° a 10° gira 20°, no 340°)
+  mapaEl.style.transform = `rotate(${giroMapa}deg)`;
+  mapaEl.style.setProperty("--contra", -giroMapa + "deg");
+  $("brujula-aguja").style.transform = `rotate(${giroMapa}deg)`;
+  enderezarRotulos();
+}
+function enderezarRotulos() {
+  for (const m of capaRotulos.getLayers()) {
+    const e = m.getElement() && m.getElement().firstChild;
+    if (!e) continue;
+    let a = 0;                                          // en pantalla: lugares derechos; calles a lo largo de la calle, nunca cabeza abajo
+    if (e.dataset.g) { a = normal180(+e.dataset.g + giroMapa); if (a > 90) a -= 180; else if (a < -90) a += 180; }
+    e.style.transform = `translate(-50%, -50%) rotate(${a - giroMapa}deg)`;
+  }
+}
+function entrarGiro() {
+  if (girando) return;
+  if (rumbo === null) { avisar("No se pudo leer la brújula del teléfono. Mueva el teléfono en forma de 8 y pruebe otra vez."); return; }
+  girando = true;
+  document.body.classList.add("giro");
+  mapa.dragging.disable();                            // con el mapa girado no se arrastra (un dedo vuelve el norte arriba)
+  mapa.doubleClickZoom.disable();
+  mapa.options.touchZoom = mapa.options.scrollWheelZoom = "center";   // con dos dedos se acerca y aleja sobre mi punto
+  armarGiro();
+  giroMapa = 0;
+  mapaEl.style.transform = "rotate(0deg)";
+  requestAnimationFrame(aplicarGiro);
+  avisar("El mapa gira con usted. Toque la brújula para volver el norte arriba.");
+}
+function salirGiro(rapido = false) {
+  if (!girando) return;
+  girando = false;
+  const fin = () => {
+    if (girando) return;
+    const centro = mapa.getCenter(), p = pivote || { x: innerWidth / 2, y: innerHeight / 2 };
+    document.body.classList.remove("giro");
+    Object.assign(mapaEl.style, { transition: "none", inset: "", left: "", top: "", width: "", height: "", transform: "" });
+    mapaEl.style.removeProperty("--contra");
+    giroMapa = 0;
+    mapa.invalidateSize({ pan: false });
+    mapaEl.style.transition = "";
+    // mi punto queda en el mismo lugar de la pantalla
+    mapa.setView(mapa.unproject(mapa.project(centro).add([innerWidth / 2 - p.x, innerHeight / 2 - p.y])), mapa.getZoom(), { animate: false });
+    mapa.dragging.enable();
+    mapa.doubleClickZoom.enable();
+    mapa.options.touchZoom = mapa.options.scrollWheelZoom = true;
+    enderezarRotulos();
+  };
+  if (rapido || calmo) return fin();
+  giroMapa -= normal180(giroMapa);                    // primero gira hasta el norte, después se acomoda
+  mapaEl.style.transform = `rotate(${giroMapa}deg)`;
+  mapaEl.style.setProperty("--contra", -giroMapa + "deg");
+  $("brujula-aguja").style.transform = "";
+  enderezarRotulos();
+  setTimeout(fin, 380);
+}
+// Con el mapa girado, deslizar un dedo vuelve el norte arriba y deja de seguir; con dos dedos se acerca o aleja.
+const dedos = new Map();
+mapaEl.addEventListener("pointerdown", e => dedos.set(e.pointerId, [e.clientX, e.clientY]), { passive: true });
+mapaEl.addEventListener("pointermove", e => {
+  const d = dedos.get(e.pointerId);
+  if (!girando || !d || dedos.size !== 1 || Math.hypot(e.clientX - d[0], e.clientY - d[1]) < 14) return;
+  dedos.clear();
+  dejarDeSeguir();
+}, { passive: true });
+for (const t of ["pointerup", "pointercancel"]) window.addEventListener(t, e => dedos.delete(e.pointerId), { passive: true });
 document.addEventListener("visibilitychange", () => { if (document.hidden) dejarDeVigilar(); else if (siguiendo) afinarUbicacion(); });
 const CAJA_RUTAS = L.latLngBounds(lineas.flatMap(l => l.tramos.flatMap(t => t.pts)));
 const enCamiri = p => CAJA_RUTAS.pad(.6).contains(p);
@@ -2292,14 +2408,24 @@ $("e-cancelar").addEventListener("click", () => cerrarElegir(false));
 $("b-nuevo").addEventListener("click", nuevoViaje);
 $("b-desde-mini").addEventListener("click", () => { document.body.classList.add("ver-desde"); $("desde").focus(); });
 // Centrar: lleva el mapa a donde estoy y lo sigue mientras camino; si muevo el mapa con el dedo, deja de seguir.
+const AVISO_GIRO = "micros-aviso-giro";
+$("b-brujula").addEventListener("click", () => salirGiro());
 $("b-centrar").addEventListener("click", () => {
   activarBrujula();
+  if (girando) { salirGiro(); return; }                                // tercer toque: norte arriba (sigue siguiendo)
+  if (siguiendo && !volando && ultimaUbic) { entrarGiro(); return; }   // segundo toque: el mapa gira con el teléfono
   $("b-centrar").classList.add("activo");
   pedirUbicacion().then(q => {
     ponerMiPunto(q);
     if (!enCamiri(q)) { dejarDeSeguir(); avisar("Usted está lejos de Camiri."); return; }
     volando = true;
-    mapa.once("moveend", () => { volando = false; siguiendo = !eligiendo; });   // se empieza a seguir cuando termina de acercarse
+    mapa.once("moveend", () => {                                          // se empieza a seguir cuando termina de acercarse
+      volando = false;
+      siguiendo = !eligiendo;
+      let visto = false;
+      try { visto = localStorage.getItem(AVISO_GIRO) === "si"; localStorage.setItem(AVISO_GIRO, "si"); } catch (e) { /* modo privado */ }
+      if (siguiendo && !visto && "DeviceOrientationEvent" in window) setTimeout(() => avisar("Toque otra vez el botón para que el mapa gire hacia donde usted mira."), 900);
+    });
     mapa.flyTo(q, Math.max(mapa.getZoom(), 16), { duration: calmo ? 0 : .6 });
     afinarUbicacion();
   }).catch(e => { dejarDeSeguir(); avisar(e); });
@@ -2362,8 +2488,22 @@ window.addEventListener("beforeinstallprompt", e => {
 });
 $("i-cerrar").addEventListener("click", cerrarInstalar);
 $("i-instalar").addEventListener("click", async () => { cerrarInstalar(); if (ofertaInstalar) { ofertaInstalar.prompt(); await ofertaInstalar.userChoice; ofertaInstalar = null; } });
-$("b-instalar").addEventListener("click", async () => { if (ofertaInstalar) { ofertaInstalar.prompt(); await ofertaInstalar.userChoice; ofertaInstalar = null; $("b-instalar").style.display = "none"; } });
-window.addEventListener("appinstalled", () => { cerrarInstalar(); avisar("Aplicación instalada."); });
+// Botón Instalar de la cabecera: queda mientras la app no esté instalada. El iPhone no instala solo: se explica cómo.
+const yaInstalada = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const esIphone = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+if (esIphone && !yaInstalada()) document.body.classList.add("puede-instalar");
+window.addEventListener("beforeinstallprompt", () => { if (!yaInstalada()) document.body.classList.add("puede-instalar"); });
+$("b-instalar").addEventListener("click", async e => {
+  e.stopPropagation();                                 // la cabecera abre "Acerca de"; este botón no
+  if (ofertaInstalar) {
+    ofertaInstalar.prompt();
+    const r = await ofertaInstalar.userChoice;
+    ofertaInstalar = null;
+    if (r && r.outcome === "accepted") document.body.classList.remove("puede-instalar");
+  } else if (esIphone) avisar("En el iPhone: toque el botón Compartir (el cuadrado con la flecha) y elija «Agregar a inicio».");
+  else avisar("Abra el menú del navegador (los tres puntos) y elija «Instalar aplicación» o «Agregar a la pantalla principal».");
+});
+window.addEventListener("appinstalled", () => { cerrarInstalar(); document.body.classList.remove("puede-instalar"); avisar("Aplicación instalada."); });
 
 // La pantalla cambia de tamaño a menudo (la barra del navegador se esconde, aparece el teclado): solo se reacomoda,
 // sin mover el mapa. Se reencuadra únicamente si el teléfono se gira.
@@ -2371,6 +2511,7 @@ let relojTamano = null, anchoAntes = window.innerWidth;
 function alCambiarTamano() {
   clearTimeout(relojTamano);
   relojTamano = setTimeout(() => {
+    if (girando) return armarGiro();
     mapa.invalidateSize({ pan: false });
     if (document.body.classList.contains("escribiendo")) return ajustarTeclado();
     if (!lateral.matches) ponerAltura(alturaCercana(alturaPx));
