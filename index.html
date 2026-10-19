@@ -348,7 +348,7 @@
 
 
   /* ------------------------------------------------ visor de fotos */
-  .visor { position: fixed; inset: 0; z-index: 1800; display: flex; align-items: center; justify-content: center; gap: 14px; padding: 24px;
+  .visor { position: fixed; inset: 0; z-index: 1950; display: flex; align-items: center; justify-content: center; gap: 14px; padding: 24px;
            background: rgba(6, 14, 26, .84); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
            opacity: 0; visibility: hidden; transition: opacity .3s ease, visibility 0s linear .3s; }
   .visor.abierto { opacity: 1; visibility: visible; transition: opacity .3s ease; }
@@ -417,6 +417,32 @@
   .mf-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .micro-foto small { margin: 0 0 3px; }
   .micro-foto .ver-linea { margin: 0; text-align: left; }
+  /* la opción elegida invita a tocarla */
+  .ver-micro { display: inline-flex; align-items: center; gap: 2px; margin-top: 6px; white-space: nowrap; font-style: normal; font-size: 12.5px; font-weight: 800; color: #1a73e8; }
+  .ver-micro svg { width: 14px; height: 14px; }
+  .op.elegida .chip { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.500px var(--c); }
+  /* tarjeta de la línea: foto del micro, dónde subir y dónde bajar */
+  #info-linea .b-caja { padding-top: 14px; max-height: calc(100dvh - 20px); overflow-y: auto; overscroll-behavior: contain; }
+  body.letra-grande #info-linea .b-caja { max-height: calc((100dvh - 20px) / 1.16); }
+  .il-foto { position: relative; display: block; width: 100%; padding: 0; aspect-ratio: 16 / 10; border-radius: 18px; overflow: hidden; background: var(--c); margin-bottom: 14px; }
+  .il-foto img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .25s ease; }
+  .il-foto img.lista { opacity: 1; }
+  .il-num { position: absolute; left: 10px; top: 10px; min-width: 46px; height: 46px; padding: 0 9px; border-radius: 14px; display: grid; place-items: center; background: var(--c); color: #fff;
+            font-weight: 800; font-size: 21px; box-shadow: 0 0 0 3px #fff, 0 6px 16px rgba(0, 0, 0, .3); }
+  .il-lupa { position: absolute; right: 10px; bottom: 10px; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: rgba(0, 0, 0, .55); color: #fff; }
+  .il-lupa svg { width: 20px; height: 20px; }
+  .il-foto.sin-foto { aspect-ratio: auto; height: 72px; }
+  .il-foto.sin-foto img, .il-foto.sin-foto .il-lupa { display: none; }
+  .il-foto.sin-foto::after { content: "Todavía no hay foto de este micro"; position: absolute; left: 72px; right: 12px; top: 50%; transform: translateY(-50%); color: #fff; font-weight: 700; font-size: 13.5px; text-align: left; }
+  .il-cab b { display: block; font-size: 21px; font-weight: 800; letter-spacing: -.01em; }
+  .il-cab span { display: block; font-size: 14px; color: var(--suave); font-weight: 600; margin-top: 2px; }
+  .il-datos { margin: 14px 0 16px; padding: 2px 12px; border-radius: 18px; background: var(--fondo); }
+  .il-fila { display: grid; grid-template-columns: 32px 1fr; gap: 11px; align-items: center; padding: 10px 0; }
+  .il-fila + .il-fila { border-top: 1px solid var(--raya); }
+  .il-fila .ic { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--panel); color: var(--tinta); }
+  .il-fila .ic svg { width: 17px; height: 17px; }
+  .il-fila small { display: block; font-size: 11.5px; font-weight: 800; color: var(--suave); text-transform: uppercase; letter-spacing: .05em; }
+  .il-fila b { display: block; font-size: 15px; font-weight: 700; line-height: 1.35; }
   body.letra-grande .op { gap: 8px; padding: 10px; }
   body.letra-grande .op-chips .chip, body.letra-grande .op-chips .pie { width: 30px; height: 30px; font-size: 13px; }
   @media (min-width: 760px) { .bienvenida { align-items: center; } }
@@ -568,6 +594,15 @@
       <dt>Versión</dt><dd id="acerca-version">—</dd>
     </dl>
     <div class="acciones"><button class="boton claro" id="b-guia">Cómo se usa</button><button class="boton" id="b-acerca-ok">Cerrar</button></div>
+  </div>
+</div>
+<div class="bienvenida" id="info-linea" role="dialog" aria-label="El micro que tiene que tomar">
+  <div class="b-caja il-caja">
+    <button class="il-foto" id="il-foto" aria-label="Ver la foto en grande"><img id="il-img" alt=""><span class="il-num" id="il-num"></span>
+      <span class="il-lupa"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.500-4.500M11 8.500v5M8.500 11h5"/></svg></span></button>
+    <div class="il-cab"><b id="il-titulo"></b><span id="il-sub"></span></div>
+    <div class="il-datos" id="il-datos"></div>
+    <div class="acciones"><button class="boton claro" id="il-recorrido">Ver recorrido</button><button class="boton" id="il-ok">Listo</button></div>
   </div>
 </div>
 <div class="alerta" id="alerta" role="alert"><b id="alerta-t"></b><span id="alerta-s"></span><button id="alerta-ok">Entendido</button></div>
@@ -1257,6 +1292,49 @@ function abrirVisor(l, i) {
 }
 function cerrarVisor() { visor = null; $("visor").classList.remove("abierto"); }
 
+// ---- tarjeta de la línea que hay que tomar: foto del micro, dónde subir, dónde bajar y cuánto tarda
+let infoLinea = null;
+function abrirInfoLinea(op, i) {
+  const t = op && op.tramos[i];
+  if (!t) return;
+  const l = t.s.l, caja = $("info-linea"), foto = $("il-foto"), img = $("il-img");
+  infoLinea = l;
+  caja.style.setProperty("--c", l.color);
+  $("il-num").textContent = l.numero;
+  $("il-titulo").textContent = l.titulo;
+  $("il-sub").textContent = "Es la que " + (t.s.sentido === "Vuelta" ? "regresa a " + t.s.hacia : t.s.circular ? "da la vuelta por " + t.s.hacia : "va a " + t.s.hacia) + ".";
+  foto.classList.remove("sin-foto");
+  img.classList.remove("lista");
+  img.onload = () => img.classList.add("lista");
+  cargarFoto(img, paradasDe(l)[0], () => foto.classList.add("sin-foto"));
+  const lugar = p => { const r = referencia(p); return r ? (r.startsWith("cerca de") ? r : "en " + r) : "donde marca el mapa"; };
+  const m = op.caminatas[i], sigue = op.tramos[i + 1];
+  const filas = [
+    [ICONO.pie, "Dónde subir", (lugar(t.subir)) + (m > 40 ? " (camine " + textoMin(m / PIE) + ")" : "")],
+    [ICONO.pin, "Dónde bajar", lugar(t.bajar) + (sigue ? ". Ahí cambia a la " + sigue.s.l.titulo : "")],
+    [ICONO.reloj, "En el micro", "Unos " + textoMin(t.min) + " (" + textoDist(t.m) + ")"],
+  ];
+  const datos = $("il-datos");
+  datos.innerHTML = "";
+  for (const [ic, k, v] of filas) {
+    const d = document.createElement("div");
+    d.className = "il-fila";
+    d.innerHTML = `<span class="ic">${ic}</span><div><small></small><b></b></div>`;
+    d.querySelector("small").textContent = k;
+    d.querySelector("b").textContent = v;
+    datos.appendChild(d);
+  }
+  caja.classList.add("ver");
+}
+function cerrarInfoLinea() { $("info-linea").classList.remove("ver"); }
+// Ver el recorrido de una línea desde el viaje: con "atrás" (o la flecha de la ficha) se vuelve al viaje, no a la lista
+let desdeViaje = false;
+function verRecorridoDesdeViaje(l) {
+  desdeViaje = true;
+  irPestana("lineas", true);              // sin paso propio en el historial: el único paso es el de la ficha
+  elegir(l.nombre);
+}
+
 let relojAviso = null;
 function avisar(texto) {
   $("aviso").textContent = texto;
@@ -1896,9 +1974,14 @@ function mostrarOpcion(i) {
     const b = document.createElement("button");
     b.className = "op" + (k === i ? " elegida" : "");
     b.innerHTML = `<span class="op-chips">${chipsDe(op)}</span><span style="min-width:0"><b>${esc(tituloDe(op))}${k === 0 && viaje.opciones.length > 1 ? '<em class="mejor">Recomendada</em>' : ""}</b><small>${
-      op.aPie ? "Caminar " + textoDist(op.caminar) : "Caminar " + textoMin(op.minCaminar) + " · micro " + textoMin(op.viajeMin)}</small></span>
+      op.aPie ? "Caminar " + textoDist(op.caminar) : "Caminar " + textoMin(op.minCaminar) + " · micro " + textoMin(op.viajeMin)}</small>${
+      k === i && !op.aPie ? `<em class="ver-micro">Ver el micro${ICONO.flecha}</em>` : ""}</span>
       <span class="op-min tabular">${Math.round(op.total)}<i>min</i></span>`;
-    b.addEventListener("click", () => mostrarOpcion(k));
+    b.addEventListener("click", e => {
+      if (k !== i || op.aPie) return mostrarOpcion(k);                 // otra opción: se elige
+      const chips = [...b.querySelectorAll(".chip")], c = e.target.closest(".chip");
+      abrirInfoLinea(op, c ? chips.indexOf(c) : 0);                    // la elegida: su micro (el número tocado, o el primero)
+    });
     return b;
   };
   caja.querySelector(".ops").appendChild(tarjeta(viaje.opciones[i], i));
@@ -1964,7 +2047,7 @@ function pintarPasos(op) {
     const ver = document.createElement("button");
     ver.className = "ver-linea";
     ver.textContent = "Ver todo su recorrido";
-    ver.addEventListener("click", () => { irPestana("lineas"); elegir(l.nombre); });
+    ver.addEventListener("click", () => verRecorridoDesdeViaje(l));
     const extra = document.createElement("div"), fb = document.createElement("button"), img = document.createElement("img"), lado = document.createElement("div"), rot = document.createElement("small");
     extra.className = "micro-foto";
     fb.className = "mf-img";
@@ -1972,7 +2055,7 @@ function pintarPasos(op) {
     img.alt = "";
     img.decoding = "async";
     fb.appendChild(img);
-    fb.addEventListener("click", () => abrirVisor(l, 0));
+    fb.addEventListener("click", () => abrirInfoLinea(op, i));
     rot.textContent = "Así es el micro";
     lado.append(rot, ver);
     extra.append(fb, lado);
@@ -2023,7 +2106,7 @@ function dibujarViaje(op) {
       op.tramos.forEach((t, i) => {
         L.polyline(t.pts, { color: "#fff", weight: 11, opacity: .95, lineCap: "round", lineJoin: "round", interactive: false }).addTo(capaViaje);
         L.polyline(t.pts, { color: t.s.l.color, weight: 6.5, opacity: 1, lineCap: "round", lineJoin: "round", bubblingMouseEvents: false }).addTo(capaViaje)
-          .on("click", () => abrirVisor(t.s.l, 0));          // tocar el recorrido: la foto de ese micro
+          .on("click", () => abrirInfoLinea(op, i));          // tocar el recorrido: la tarjeta de ese micro
         if (i > 0) pie(op.caminos[i]);
       });
       pie(op.caminos[op.caminos.length - 1]);
@@ -2164,6 +2247,7 @@ function irPestana(p, desdeHistorial = false) {
   document.body.dataset.pestana = p;
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("activa", b.dataset.p === p));
   if (p === "ir") {
+    desdeViaje = false;
     if (seleccion) { seleccion = null; document.body.classList.remove("en-ficha"); if (location.hash) history.replaceState({ pestana: "ir" }, "", location.pathname + location.search); }
     mapa.removeLayer(capaRutas);            // "Ir a un lugar" empieza con el mapa limpio: solo se dibuja el viaje
     capaMarcas.clearLayers();
@@ -2226,12 +2310,17 @@ try { if (localStorage.getItem(VISTA) === "satelite" && navigator.onLine) ponerV
 $("e-listo").addEventListener("click", () => cerrarElegir(true));
 
 // ----------------------------------------------------------------- botones
-$("b-volver").addEventListener("click", () => elegir(null));
+// la flecha de la ficha es lo mismo que "atrás": así el historial no se ensucia y atrás no vuelve a abrir la ficha
+$("b-volver").addEventListener("click", () => { if (desdeViaje || (history.state && history.state.linea)) history.back(); else elegir(null); });
+$("il-ok").addEventListener("click", cerrarInfoLinea);
+$("info-linea").addEventListener("click", e => { if (e.target.id === "info-linea") cerrarInfoLinea(); });
+$("il-foto").addEventListener("click", () => { if (infoLinea && !$("il-foto").classList.contains("sin-foto")) abrirVisor(infoLinea, 0); });
+$("il-recorrido").addEventListener("click", () => { cerrarInfoLinea(); if (infoLinea) verRecorridoDesdeViaje(infoLinea); });
 $("v-cerrar").addEventListener("click", cerrarVisor);
 $("v-ant").addEventListener("click", () => visor && abrirVisor(visor.l, visor.i - 1));
 $("v-sig").addEventListener("click", () => visor && abrirVisor(visor.l, visor.i + 1));
 $("visor").addEventListener("click", e => { if (e.target.id === "visor") cerrarVisor(); });
-document.addEventListener("keydown", e => { if (visor && e.key === "Escape") cerrarVisor(); });
+document.addEventListener("keydown", e => { if (e.key !== "Escape") return; if (visor) cerrarVisor(); else cerrarInfoLinea(); });
 $("b-red").addEventListener("click", () => elegir(null));
 $("buscar").addEventListener("input", pintarLista);
 $("buscar").addEventListener("focus", () => modoEscribir(true));
