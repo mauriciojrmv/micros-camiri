@@ -44,7 +44,7 @@
   .rb.ciudad { font-size: 16px; font-weight: 800; color: #1d2733; }
   .rb.poi { font-size: 11px; color: #9a5b1e; }
   .rb.agua { font-style: italic; color: #4b7fa8; }
-  .leaflet-tile-pane { filter: saturate(.5) brightness(1.04); transition: filter .4s ease; }
+  .leaflet-tile-pane { transition: filter .4s ease; }   /* el mapa propio ya viene con sus colores: sin filtro (un filtro sobre todo el mapa pesa al moverlo) */
   body[data-tema="oscuro"]:not(.satelite) .leaflet-tile-pane { filter: invert(1) hue-rotate(185deg) saturate(.5) brightness(.82); }
   body.satelite .leaflet-tile-pane { filter: brightness(.88); }
   .leaflet-control-attribution { font-size: 9px; background: rgba(255, 255, 255, .65) !important; border-radius: 6px 0 0 0; }
@@ -703,8 +703,12 @@ oscuro.addEventListener("change", ponerTema);
 
 // ------------------------------------------------------------------- mapa
 const CAJA_MAPA = window.MAPA_BASE ? L.latLngBounds([window.MAPA_BASE.caja[0], window.MAPA_BASE.caja[1]], [window.MAPA_BASE.caja[2], window.MAPA_BASE.caja[3]]) : null;
-const mapa = L.map("mapa", { zoomControl: false, renderer: L.svg({ padding: .25 }), minZoom: 12, maxZoom: 19, fadeAnimation: false,
-  maxBounds: CAJA_MAPA ? CAJA_MAPA.pad(1.2) : null, maxBoundsViscosity: .8 }).setView(CAMIRI, 14);   // las rutas se dibujan de más alrededor, para que no se corten al mover   // las rutas se dibujan de más alrededor, para que no se corten al mover
+const mapa = L.map("mapa", { zoomControl: false, renderer: L.svg({ padding: .25 }), minZoom: 13, maxZoom: 19, fadeAnimation: false,
+  maxBounds: CAJA_MAPA ? CAJA_MAPA.pad(.25) : null, maxBoundsViscosity: .9 }).setView(CAMIRI, 14);
+// El mapa no se puede llevar lejos de Camiri. Solo para mostrar un viaje entero en un celular chico (zoom 12) se afloja el límite.
+// Con los dedos se llega hasta el zoom 13 (la ciudad entera); el 12 es solo para mostrar un viaje largo en un celular chico.
+function limiteMapa(flojo) { mapa.setMinZoom(flojo ? 12 : 13); if (CAJA_MAPA) mapa.setMaxBounds(flojo ? CAJA_MAPA.pad(1.2) : girando ? null : CAJA_MAPA.pad(.25)); }
+mapa.on("zoomend", () => { if (mapa.getZoom() >= 13) limiteMapa(false); });
 const calles = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Mapa &copy; Esri" });
 const satelite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, maxNativeZoom: 17, attribution: "Imágenes &copy; Esri" });
 // ------------------------------------------------------------ mapa propio (sin depender de otro servidor)
@@ -742,7 +746,7 @@ function dibujarBase() {
 // El fondo son imágenes ya dibujadas (carpeta "teselas", hechas con los datos de OpenStreetMap): el celular solo las desplaza.
 let fondoMapa = null;
 if (BASE) {
-  fondoMapa = L.tileLayer("teselas/{z}/{x}/{y}.png", { minZoom: 12, minNativeZoom: 13, maxNativeZoom: 17, maxZoom: 19, bounds: CAJA_MAPA, keepBuffer: 2, updateWhenZooming: false,
+  fondoMapa = L.tileLayer("teselas/{z}/{x}/{y}.png", { minZoom: 12, maxNativeZoom: 17, maxZoom: 19, bounds: CAJA_MAPA, keepBuffer: 2, updateWhenZooming: false,
     attribution: "&copy; colaboradores de OpenStreetMap" }).addTo(mapa);
   capaRotulos.addTo(mapa);
 } else calles.addTo(mapa);
@@ -785,7 +789,7 @@ function rotulosBase() {
   };
   for (const l of BASE.lugares) {
     if (l.t === "city" || l.t === "town") continue;              // el nombre de la ciudad ya está arriba, en el encabezado
-    const desde = l.t === "poi" ? 16 : 14, px = l.t === "poi" ? 6.4 : 8;
+    const desde = l.t === "poi" ? 16 : 13, px = l.t === "poi" ? 6.4 : 8;
     if (z < desde || !vista.contains(l.p) || puestos.length >= MAX_ROTULOS) continue;
     const pt = mapa.latLngToContainerPoint(l.p);
     if (!libre(pt, l.n, px)) continue;
@@ -896,6 +900,7 @@ function margen() {
 }
 function encuadrar(pts, animado = true) {
   if (!pts.length) return;
+  limiteMapa(true);
   const opciones = { ...margen(), maxZoom: 16 };
   if (animado && !calmo) mapa.flyToBounds(L.latLngBounds(pts), { ...opciones, duration: .85 });
   else mapa.fitBounds(L.latLngBounds(pts), { ...opciones, animate: false });
@@ -1796,6 +1801,7 @@ function entrarGiro() {
   cancelarEspera(false);
   if (!brujulaImprecisa) ocultarCalibrar();
   girando = true;
+  limiteMapa(false);
   document.body.classList.add("giro");
   mapa.dragging.disable();                            // con el mapa girado no se arrastra (un dedo vuelve el norte arriba)
   mapa.doubleClickZoom.disable();
@@ -1857,6 +1863,7 @@ function salirGiro(rapido = false) {
     mapaEl.style.transition = "";
     // mi punto queda en el mismo lugar de la pantalla
     mapa.setView(mapa.unproject(mapa.project(centro).add([innerWidth / 2 - p.x, innerHeight / 2 - p.y])), mapa.getZoom(), { animate: false });
+    limiteMapa(mapa.getZoom() < 13);
     mapa.dragging.enable();
     mapa.doubleClickZoom.enable();
     mapa.options.touchZoom = mapa.options.scrollWheelZoom = true;
