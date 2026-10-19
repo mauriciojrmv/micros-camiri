@@ -1,4 +1,4 @@
-# Micros de Camiri
+# Micros Camiri
 
 Aplicación web (PWA) con las rutas, distancias y tiempos de las líneas de micros de Camiri.
 

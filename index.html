@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#0e2238">
 <meta name="description" content="Rutas, distancias y tiempos de las líneas de micros de Camiri.">
-<title>Micros de Camiri</title>
+<title>Micros Camiri</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icono-192.png">
 <link rel="apple-touch-icon" href="icono-192.png">
@@ -65,7 +65,7 @@
   .barra { position: fixed; z-index: 500; top: calc(var(--arriba) + 10px); left: 12px; height: 46px; padding: 0 16px 0 6px; display: flex; align-items: center; gap: 9px;
            max-width: calc(100vw - 150px); border-radius: 23px; color: var(--tinta); background: var(--panel); box-shadow: 0 4px 16px rgba(10, 25, 45, .2); cursor: pointer; }
   .barra:active { transform: scale(.98); }
-  .barra img { width: 34px; height: 34px; object-fit: contain; background: #fff; border-radius: 50%; padding: 3px; flex: none; box-shadow: 0 0 0 1px var(--raya), 0 0 0 rgba(0, 0, 0, .22); }
+  .barra img { width: 34px; height: 34px; object-fit: cover; border-radius: 11px; flex: none; }
   .barra div { min-width: 0; flex: 1; }
   .barra small { display: block; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: #a87a1c; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .barra h1 { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; line-height: 1.15; }
@@ -101,7 +101,6 @@
   .b-vista { position: fixed; z-index: 450; right: 12px; top: calc(var(--arriba) + 13px); height: 40px; padding: 0 13px 0 10px; border-radius: 20px;
              display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; background: var(--panel); color: var(--tinta); box-shadow: 0 4px 14px rgba(10, 25, 45, .22); }
   .b-vista svg { width: 18px; height: 18px; }
-  body.eligiendo .b-vista { display: none; }
   body.satelite .rb { color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; }
   body.satelite #mapa { background: #2b3227; }
   /* modo de prueba */
@@ -385,12 +384,41 @@
   .b-caja li b { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--oro); color: #1c1400; font-size: 18px; }
   .b-caja .boton { width: 100%; font-size: 17px; }
   .acerca-cab { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-  .acerca-cab img { width: 52px; height: 52px; border-radius: 16px; background: #fff; padding: 4px; box-shadow: 0 0 0 1px var(--raya); }
+  .acerca-cab img { width: 52px; height: 52px; border-radius: 16px; }
   .acerca-cab b { display: block; font-size: 20px; font-weight: 800; }
   .acerca-cab span { display: block; font-size: 13px; color: var(--suave); font-weight: 700; }
   .acerca dl { margin: 0 0 16px; display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 14px; line-height: 1.4; }
   .acerca dt { font-weight: 800; color: var(--suave); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
   .acerca dd { margin: 0; font-weight: 600; }
+  #acerca .b-caja { max-height: calc(100dvh - 20px); overflow-y: auto; overscroll-behavior: contain; }
+  body.letra-grande #acerca .b-caja { max-height: calc((100dvh - 20px) / 1.16); }
+  .acerca dl { font-size: 13px; gap: 6px 14px; }
+  .ajustes { display: grid; gap: 8px; margin: 0 0 16px; }
+  .ajuste { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 66px; padding: 10px 10px 10px 12px; border-radius: 18px; background: var(--fondo); color: var(--tinta); text-align: left; }
+  .ajuste > div { flex: 1; min-width: 0; }
+  .ajuste b { display: block; font-size: 15px; font-weight: 800; }
+  .ajuste small { display: block; font-size: 12.5px; color: var(--suave); font-weight: 600; margin-top: 2px; line-height: 1.35; }
+  .aj-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--panel); color: #1a73e8; flex: none; }
+  .aj-ic svg { width: 21px; height: 21px; }
+  .aj-ic.aa { font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
+  .ajuste .flecha { width: 18px; height: 18px; color: var(--suave); flex: none; }
+  .ajuste.letra { flex-wrap: wrap; row-gap: 10px; }
+  .ajuste > .seg { flex: 1 1 100%; }
+  .seg { display: flex; gap: 3px; padding: 3px; border-radius: 14px; background: var(--raya); flex: 1 1 100%; }
+  .seg button { flex: 1; height: 46px; border-radius: 11px; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 14.5px; font-weight: 800; line-height: 1; color: var(--suave);
+                transition: background .2s, color .2s, box-shadow .2s; }
+  .seg i { font-style: normal; }
+  .seg button:first-child i { font-size: 15px; }
+  .seg button:last-child i { font-size: 23px; }
+  .seg button[aria-pressed="true"] { background: var(--panel); color: #1a73e8; box-shadow: 0 2px 8px rgba(10, 25, 45, .18); }
+  /* foto del micro dentro de los pasos del viaje */
+  .micro-foto { display: flex; align-items: center; gap: 11px; margin-top: 9px; }
+  .mf-img { width: 84px; height: 56px; padding: 0; border-radius: 12px; overflow: hidden; flex: none; background: var(--fondo); box-shadow: 0 0 0 2px var(--c); }
+  .mf-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .micro-foto small { margin: 0 0 3px; }
+  .micro-foto .ver-linea { margin: 0; text-align: left; }
+  body.letra-grande .op { gap: 8px; padding: 10px; }
+  body.letra-grande .op-chips .chip, body.letra-grande .op-chips .pie { width: 30px; height: 30px; font-size: 13px; }
   @media (min-width: 760px) { .bienvenida { align-items: center; } }
   #aviso { position: fixed; z-index: 900; left: 50%; top: calc(var(--barra) + var(--arriba) + 12px); transform: translate(-50%, -14px); opacity: 0; pointer-events: none; max-width: min(88vw, 460px);
            padding: 11px 16px; border-radius: 14px; background: var(--navy); color: #fff; font-size: 13.5px; font-weight: 700; transition: all .3s ease; text-align: center; box-shadow: 0 10px 26px rgba(0, 0, 0, .28); }
@@ -428,7 +456,7 @@
 
 <header class="barra" id="barra" role="button" aria-label="Acerca de la aplicación">
   <img src="icono-192.png" alt="">
-  <div><small id="t-entidad">Municipio de Camiri</small><h1>Micros de Camiri</h1></div>
+  <div><h1>Micros Camiri</h1></div>
   <button id="b-instalar"><svg class="i" viewBox="0 0 24 24"><path d="M12 4v11M7.500 11l4.500 4.500 4.500-4.500M5 20h14"/></svg>Instalar</button>
 </header>
 
@@ -525,7 +553,13 @@
 </div>
 <div class="bienvenida" id="acerca" role="dialog" aria-label="Acerca de la aplicación">
   <div class="b-caja acerca">
-    <div class="acerca-cab"><img src="icono-192.png" alt=""><div><b>Micros de Camiri</b><span id="acerca-entidad">Municipio de Camiri</span></div></div>
+    <div class="acerca-cab"><img src="icono-192.png" alt=""><div><b>Micros Camiri</b><span id="acerca-entidad">Rutas de micros de Camiri</span></div></div>
+    <div class="ajustes">
+      <div class="ajuste letra"><span class="aj-ic aa">Aa</span><div><b>Tamaño de letra</b><small>Agrándela para leer más cómodo</small></div>
+        <div class="seg" role="group" aria-label="Tamaño de letra"><button id="letra-no" aria-pressed="true"><i>A</i>Normal</button><button id="letra-si" aria-pressed="false"><i>A</i>Grande</button></div></div>
+      <button class="ajuste" id="b-mandar-ubic"><span class="aj-ic"><svg class="i" viewBox="0 0 24 24"><path d="M12 21s6.500-5.800 6.500-11a6.500 6.500 0 0 0-13 0c0 5.200 6.500 11 6.500 11z"/><circle cx="12" cy="10" r="2.300"/></svg></span>
+        <div><b>Enviar mi ubicación</b><small>Por WhatsApp, para que lleguen en micro</small></div><svg class="i flecha" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
     <dl>
       <dt>Rutas</dt><dd>Medidas con GPS en recorridos reales de cada línea.</dd>
       <dt>Datos al</dt><dd id="acerca-fecha">—</dd>
@@ -533,14 +567,13 @@
       <dt>Funciona</dt><dd>Gratis y sin registrarse. Después de abrirla una vez, sirve aunque haya poca señal.</dd>
       <dt>Versión</dt><dd id="acerca-version">—</dd>
     </dl>
-    <button class="boton claro letra" id="b-letra">Aa · Letra más grande: no</button>
     <div class="acciones"><button class="boton claro" id="b-guia">Cómo se usa</button><button class="boton" id="b-acerca-ok">Cerrar</button></div>
   </div>
 </div>
 <div class="alerta" id="alerta" role="alert"><b id="alerta-t"></b><span id="alerta-s"></span><button id="alerta-ok">Entendido</button></div>
 <div class="sin-red" id="sin-red"><i></i>Sin internet · funciona con lo guardado</div>
 <div id="aviso" role="status"></div>
-<div id="entrada"><div><img src="icono-192.png" alt=""><b>Micros de Camiri</b><span>Municipio de Camiri</span></div></div>
+<div id="entrada"><div><img src="icono-192.png" alt=""><b>Micros Camiri</b><span>Rutas y paradas de micros</span></div></div>
 
 <script src="rutas_datos.js" onerror="void 0"></script>
 <script src="lugares.js" onerror="void 0"></script>
@@ -586,7 +619,6 @@ lineas.forEach((l, i) => {
   l.busca = sinTildes(l.titulo + " " + l.detalle + " linea " + l.numero);
   l.inicio = l.orden[0].pts[0];
 });
-if (datos.entidad) { $("t-entidad").textContent = datos.entidad; document.querySelector("#entrada span").textContent = datos.entidad; }
 
 // ------------------------------------------------------------------- tema
 const oscuro = window.matchMedia("(prefers-color-scheme: dark)");
@@ -596,8 +628,8 @@ oscuro.addEventListener("change", ponerTema);
 
 // ------------------------------------------------------------------- mapa
 const CAJA_MAPA = window.MAPA_BASE ? L.latLngBounds([window.MAPA_BASE.caja[0], window.MAPA_BASE.caja[1]], [window.MAPA_BASE.caja[2], window.MAPA_BASE.caja[3]]) : null;
-const mapa = L.map("mapa", { zoomControl: false, renderer: L.svg({ padding: .25 }), minZoom: 13, maxZoom: 19, fadeAnimation: false,
-  maxBounds: CAJA_MAPA ? CAJA_MAPA.pad(.15) : null, maxBoundsViscosity: .8 }).setView(CAMIRI, 14);   // las rutas se dibujan de más alrededor, para que no se corten al mover   // las rutas se dibujan de más alrededor, para que no se corten al mover
+const mapa = L.map("mapa", { zoomControl: false, renderer: L.svg({ padding: .25 }), minZoom: 12, maxZoom: 19, fadeAnimation: false,
+  maxBounds: CAJA_MAPA ? CAJA_MAPA.pad(1.2) : null, maxBoundsViscosity: .8 }).setView(CAMIRI, 14);   // las rutas se dibujan de más alrededor, para que no se corten al mover   // las rutas se dibujan de más alrededor, para que no se corten al mover
 const calles = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Mapa &copy; Esri" });
 const satelite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, maxNativeZoom: 17, attribution: "Imágenes &copy; Esri" });
 // ------------------------------------------------------------ mapa propio (sin depender de otro servidor)
@@ -635,7 +667,7 @@ function dibujarBase() {
 // El fondo son imágenes ya dibujadas (carpeta "teselas", hechas con los datos de OpenStreetMap): el celular solo las desplaza.
 let fondoMapa = null;
 if (BASE) {
-  fondoMapa = L.tileLayer("teselas/{z}/{x}/{y}.png", { minZoom: 13, maxNativeZoom: 17, maxZoom: 19, bounds: CAJA_MAPA, keepBuffer: 2, updateWhenZooming: false,
+  fondoMapa = L.tileLayer("teselas/{z}/{x}/{y}.png", { minZoom: 12, minNativeZoom: 13, maxNativeZoom: 17, maxZoom: 19, bounds: CAJA_MAPA, keepBuffer: 2, updateWhenZooming: false,
     attribution: "&copy; colaboradores de OpenStreetMap" }).addTo(mapa);
   capaRotulos.addTo(mapa);
 } else calles.addTo(mapa);
@@ -1105,9 +1137,9 @@ function pintarFicha(l) {
 
 async function compartir(l) {
   const url = location.href.split("#")[0] + "#linea-" + l.numero;
-  const texto = `${l.titulo}${l.detalle ? " (" + l.detalle + ")" : ""}: ${num(l.km, 1)} km${l.min ? ", " + num(l.min, 0) + " min" : ""}. Micros de Camiri.`;
+  const texto = `${l.titulo}${l.detalle ? " (" + l.detalle + ")" : ""}: ${num(l.km, 1)} km${l.min ? ", " + num(l.min, 0) + " min" : ""}. Micros Camiri.`;
   try {
-    if (navigator.share) await navigator.share({ title: "Micros de Camiri", text: texto, url });
+    if (navigator.share) await navigator.share({ title: "Micros Camiri", text: texto, url });
     else { await navigator.clipboard.writeText(texto + " " + url); avisar("Enlace copiado."); }
   } catch (e) { /* el usuario cerró el cuadro de compartir */ }
 }
@@ -1136,8 +1168,9 @@ function limpiarTrazo(el) { el.style.transition = ""; el.style.strokeDasharray =
 
 function reencuadrar(animado = true) {
   if (pestana === "ir" && viaje.opcion) { encuadrar(puntosViaje(viaje.opcion), animado); return; }
-  if (pestana === "ir" && miPunto && enCamiri(miPunto)) {          // sin viaje: el mapa en donde estoy (si ya se sabe)
-    if (animado && !calmo) mapa.flyTo(miPunto, Math.max(mapa.getZoom(), 15), { duration: .6 }); else mapa.setView(miPunto, Math.max(mapa.getZoom(), 15), { animate: false });
+  if (pestana === "ir" && miPunto && enCamiri(miPunto)) {          // sin viaje: el mapa en donde estoy (si ya se sabe), arriba del panel
+    const z = Math.max(mapa.getZoom(), 15), corrido = mapa.unproject(mapa.project(miPunto, z).add([0, Math.min(alturaActual(), innerHeight * .5) / 2]), z);
+    if (animado && !calmo) mapa.flyTo(corrido, z, { duration: .6 }); else mapa.setView(corrido, z, { animate: false });
     return;
   }
   if (pestana === "ir") {                     // sin viaje y sin GPS: el centro de Camiri, donde salen los micros
@@ -1273,7 +1306,7 @@ function activarBrujula() {                      // se llama desde un toque: el 
 }
 const LUG = window.LUGARES_CAMIRI || { lugares: [], calles: { nombres: [], pts: [] } };
 const metros = (a, b) => { const dy = (a[0] - b[0]) * 111320, dx = (a[1] - b[1]) * 111320 * Math.cos(a[0] * Math.PI / 180); return Math.hypot(dx, dy); };
-// Lugares y calles cargados por el Municipio con el editor (lugares_propios.js): van primero y se buscan también por sus otros nombres.
+// Lugares y calles cargados con el Editor de lugares (lugares_propios.js): van primero y se buscan también por sus otros nombres.
 const PROPIOS = window.LUGARES_PROPIOS || { lugares: [], calles: [] };
 for (const c of PROPIOS.calles || []) {
   if (!c.n || !c.pts || c.pts.length < 2) continue;
@@ -1286,7 +1319,7 @@ for (const c of PROPIOS.calles || []) {
   const fin = c.pts[c.pts.length - 1];
   LUG.calles.pts.push([fin[0], fin[1], i]);
 }
-// lugares que el Municipio marcó como que ya no existen o que corrigió: se sacan de la lista
+// lugares que en el editor se marcaron como que ya no existen o que corrigió: se sacan de la lista
 const ocultos = PROPIOS.ocultos || [];
 if (ocultos.length) LUG.lugares = LUG.lugares.filter(x => !ocultos.some(o => sinTildes(o.n) === sinTildes(x[0]) && metros(o.p, [x[2], x[3]]) < 60));
 for (const x of PROPIOS.lugares || []) if (x.n && x.p) LUG.lugares.unshift([x.n, x.tipo || "Lugar", x.p[0], x.p[1], x.alias || [], true]);
@@ -1327,7 +1360,30 @@ function buscarLugares(texto) {
     if (!palabras.every(w => x.busca.includes(w))) return null;
     const n = sinTildes(x.n);
     return { x, puntos: (n.startsWith(t) ? 4 : 0) + (n.split(/\s+/).some(w => w.startsWith(palabras[0])) ? 2 : 0) + (x.tipo === "lugar" ? 1 : 0) + (x.propio ? 3 : 0) - n.length / 200 };
-  }).filter(Boolean).sort((a, b) => b.puntos - a.puntos).slice(0, 12).map(r => r.x);
+  }).filter(Boolean).sort((a, b) => b.puntos - a.puntos).filter(sinRepetir()).slice(0, 12).map(r => r.x);
+}
+// el mismo nombre a menos de 250 m es el mismo lugar cargado dos veces (pasa con los datos de OpenStreetMap): se muestra una vez
+function sinRepetir() {
+  const vistos = [];
+  return ({ x }) => {
+    const k = sinTildes(x.n);
+    if (x.p && vistos.some(v => v.k === k && metros(v.p, x.p) < 250)) return false;
+    if (x.p) vistos.push({ k, p: x.p });
+    return true;
+  };
+}
+// Ubicaciones que llegan como texto: coordenadas, enlaces de Google Maps que las traen, o el enlace de esta aplicación
+function puntoDeTexto(t) {
+  if (!t) return null;
+  try { t = decodeURIComponent(String(t)); } catch (e) { t = String(t); }
+  const m = t.match(/(-?\d{1,2}\.\d{3,})\s*,\s*(-?\d{1,3}\.\d{3,})/);
+  if (!m) return null;
+  const p = [+(+m[1]).toFixed(6), +(+m[2]).toFixed(6)];
+  return !CAJA_MAPA || CAJA_MAPA.pad(.5).contains(p) ? p : null;
+}
+function nombreDePunto(p) { const ref = referencia(p); return ref ? (ref.startsWith("cerca de") ? "Punto " + ref : ref) : "Ubicación compartida"; }
+function enlaceA(p, nombre) {
+  return location.origin + location.pathname + "?ir=" + p[0].toFixed(5) + "," + p[1].toFixed(5) + (nombre ? "&n=" + encodeURIComponent(nombre) : "");
 }
 // Esquinas: "Comercio y Sucre" -> el cruce de esas dos calles (puntos que comparten en el mapa).
 let esquinas = null;
@@ -1410,10 +1466,14 @@ function pintarSugerencias() {
   const elegirLugar = x => () => { ponerPunto(campo, { n: x.n, sub: x.sub, p: x.p }); };
   const escrito = texto && !(viaje[campo] && texto === viaje[campo].n);
   if (escrito) {
-    const r = [...buscarEsquinas(texto), ...buscarLugares(texto)];
+    const pegado = puntoDeTexto(texto);
+    if (pegado) caja.appendChild(fila(ICONO.lugar, "Ir a la ubicación pegada", nombreDePunto(pegado), () => ponerPunto(campo, { n: nombreDePunto(pegado), sub: "Ubicación compartida", p: pegado }), true));
+    caja.appendChild(fila(ICONO.mapa, "Marcar en el mapa", "Mueva el mapa hasta el lugar", () => abrirElegir(campo)));   // arriba: con el teclado abierto siempre se ve
+    const r = pegado ? [] : [...buscarEsquinas(texto), ...buscarLugares(texto)];
     r.forEach(x => caja.appendChild(fila(x.tipo === "calle" ? ICONO.calle : ICONO.lugar, x.n, x.sub, elegirLugar(x))));
-    if (!r.length) caja.insertAdjacentHTML("beforeend", '<div class="vacio">No se encontró ese lugar. Pruebe con otro nombre, o márquelo en el mapa.</div>');
-    caja.appendChild(fila(ICONO.mapa, "Marcar en el mapa", "Mueva el mapa hasta el lugar", () => abrirElegir(campo)));
+    if (!r.length && !pegado) caja.insertAdjacentHTML("beforeend", /https?:\/\//.test(texto)
+      ? '<div class="vacio">Ese enlace no trae la ubicación. Pida que se la manden con «Enviar mi ubicación» de esta aplicación, o márquela en el mapa.</div>'
+      : '<div class="vacio">No se encontró ese lugar. Pruebe con otro nombre, o márquelo en el mapa.</div>');
     return;
   }
   if (campo === "desde") caja.appendChild(fila(ICONO.gps, "Mi ubicación", "Usar el GPS del teléfono", () => ponerPunto("desde", { n: "Mi ubicación", gps: true, p: null }), true));
@@ -1903,9 +1963,21 @@ function pintarPasos(op) {
     pb.querySelector(".ic").innerHTML = esc(l.numero);
     const ver = document.createElement("button");
     ver.className = "ver-linea";
-    ver.textContent = "Ver su recorrido y la foto de su parada";
+    ver.textContent = "Ver todo su recorrido";
     ver.addEventListener("click", () => { irPestana("lineas"); elegir(l.nombre); });
-    pb.querySelector("div").appendChild(ver);
+    const extra = document.createElement("div"), fb = document.createElement("button"), img = document.createElement("img"), lado = document.createElement("div"), rot = document.createElement("small");
+    extra.className = "micro-foto";
+    fb.className = "mf-img";
+    fb.setAttribute("aria-label", "Ver la foto del micro de la " + l.titulo);
+    img.alt = "";
+    img.decoding = "async";
+    fb.appendChild(img);
+    fb.addEventListener("click", () => abrirVisor(l, 0));
+    rot.textContent = "Así es el micro";
+    lado.append(rot, ver);
+    extra.append(fb, lado);
+    cargarFoto(img, paradasDe(l)[0], () => { fb.remove(); rot.remove(); });   // si no hay foto, queda solo el enlace
+    pb.querySelector("div").appendChild(extra);
     caja.appendChild(pb);
     const baja = referencia(t.bajar);
     caja.appendChild(paso(ICONO.pin, "", "Bájese " + (baja ? (baja.startsWith("cerca de") ? baja : "en " + baja) : "donde marca el mapa"),
@@ -1941,13 +2013,17 @@ function dibujarViaje(op) {
   atenuarLineas(!!op);
   const o = viaje.desde && viaje.desde.p, d = viaje.hasta && viaje.hasta.p;
   if (op) {
-    const pie = c => L.polyline(c.pts, { color: "#4a5b6d", weight: 5, opacity: .9, dashArray: "1 10", lineCap: "round", lineJoin: "round", interactive: false }).addTo(capaViaje);
+    const pie = c => {                      // puntos oscuros con borde blanco: se ven sobre el mapa y sobre la foto satelital
+      L.polyline(c.pts, { color: "#fff", weight: 10.5, opacity: 1, dashArray: "1 13", lineCap: "round", lineJoin: "round", interactive: false }).addTo(capaViaje);
+      L.polyline(c.pts, { color: "#1f3f63", weight: 6.5, opacity: 1, dashArray: "1 13", lineCap: "round", lineJoin: "round", interactive: false }).addTo(capaViaje);
+    };
     if (op.aPie) pie(op.caminos[0]);
     else {
       pie(op.caminos[0]);
       op.tramos.forEach((t, i) => {
         L.polyline(t.pts, { color: "#fff", weight: 11, opacity: .95, lineCap: "round", lineJoin: "round", interactive: false }).addTo(capaViaje);
-        L.polyline(t.pts, { color: t.s.l.color, weight: 6.5, opacity: 1, lineCap: "round", lineJoin: "round", interactive: false }).addTo(capaViaje);
+        L.polyline(t.pts, { color: t.s.l.color, weight: 6.5, opacity: 1, lineCap: "round", lineJoin: "round", bubblingMouseEvents: false }).addTo(capaViaje)
+          .on("click", () => abrirVisor(t.s.l, 0));          // tocar el recorrido: la foto de ese micro
         if (i > 0) pie(op.caminos[i]);
       });
       pie(op.caminos[op.caminos.length - 1]);
@@ -2052,21 +2128,31 @@ function hablar(texto) {
   u.lang = "es-ES";
   u.voice = voces.find(v => /^es[-_](BO|419|MX|AR|US)/i.test(v.lang)) || voces.find(v => /^es/i.test(v.lang)) || null;
   u.rate = .92;
+  hablando = u;
+  u.onend = u.onerror = () => { if (hablando === u) { hablando = null; marcarEscucha(false); } };
   speechSynthesis.speak(u);
   return true;
 }
+let hablando = null;
+function marcarEscucha(si) {
+  const b = $("b-escuchar");
+  if (!b) return;
+  b.classList.toggle("activo", si);
+  b.lastChild.textContent = si ? "Detener" : "Escuchar";
+}
 function textoPasos() { return [...document.querySelectorAll("#pasos .paso")].map(x => x.querySelector("b").textContent + ". " + x.querySelector("small").textContent).join(" "); }
 function escucharViaje() {
-  if (window.speechSynthesis && speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
+  if ($("b-escuchar").classList.contains("activo")) { hablando = null; if (window.speechSynthesis) speechSynthesis.cancel(); marcarEscucha(false); return; }
   const op = viaje.opcion;
   if (!hablar(`Para ir a ${viaje.hasta.n}, tarda unos ${Math.round(op.total)} minutos. ${textoPasos()}`)) avisar("Este teléfono no puede leer en voz alta.");
+  else marcarEscucha(true);
 }
 async function compartirViaje() {
   const op = viaje.opcion;
   const pasos = [...document.querySelectorAll("#pasos .paso")].map(x => "• " + x.querySelector("b").textContent + (x.querySelector("small").textContent ? " — " + x.querySelector("small").textContent : ""));
-  const texto = `Cómo llegar a ${viaje.hasta.n} en micro (unos ${Math.round(op.total)} min):\n${pasos.join("\n")}\n\nMicros de Camiri: ${location.origin + location.pathname}`;
+  const texto = `Cómo llegar a ${viaje.hasta.n} en micro (unos ${Math.round(op.total)} min):\n${pasos.join("\n")}\n\nVerlo en el mapa: ${enlaceA(viaje.hasta.p, viaje.hasta.n)}`;
   try {
-    if (navigator.share) await navigator.share({ title: "Micros de Camiri", text: texto });
+    if (navigator.share) await navigator.share({ title: "Micros Camiri", text: texto });
     else window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank", "noopener");
   } catch (e) { /* la persona cerró el cuadro */ }
 }
@@ -2183,7 +2269,7 @@ function cerrarInstalar() {
 window.addEventListener("beforeinstallprompt", e => {
   e.preventDefault();
   ofertaInstalar = e;
-  if (!instalarVisto) setTimeout(() => { if (!$("bienvenida").classList.contains("ver")) $("instalar-caja").classList.add("ver"); }, 2500);
+  if (!instalarVisto) setTimeout(() => { if (!$("bienvenida").classList.contains("ver") && !viaje.hasta) $("instalar-caja").classList.add("ver"); }, 2500);   // no tapa un viaje
 });
 $("i-cerrar").addEventListener("click", cerrarInstalar);
 $("i-instalar").addEventListener("click", async () => { cerrarInstalar(); if (ofertaInstalar) { ofertaInstalar.prompt(); await ofertaInstalar.userChoice; ofertaInstalar = null; } });
@@ -2214,9 +2300,30 @@ setTimeout(() => { mapa.invalidateSize(); reencuadrar(false); $("entrada").class
 // La guía aparece solo la primera vez que se abre la aplicación en ese teléfono.
 let yaVio = false;
 try { yaVio = localStorage.getItem("micros-guia-vista") === "si"; } catch (e) { /* modo privado */ }
-if (!yaVio && lineas.length) setTimeout(() => $("bienvenida").classList.add("ver"), 900);
+const param = new URLSearchParams(location.search);
+const llegada = ["ir", "text", "url", "title"].map(k => param.get(k) || "").join(" ").trim();   // "?ir=" (enlace de esta app) o lo que se comparte a la app
+if (!yaVio && lineas.length && !llegada) setTimeout(() => $("bienvenida").classList.add("ver"), 900);
+// Se ubica solo al abrir (si el teléfono ya dio permiso, o la primera vez después de la guía); no mueve el mapa si la persona ya lo tocó.
+let tocoMapa = false, ubicadoAlAbrir = false;
+mapa.once("dragstart", () => { tocoMapa = true; });
+async function ubicarAlAbrir() {
+  if (ubicadoAlAbrir || !navigator.geolocation) return;
+  ubicadoAlAbrir = true;
+  try { if (navigator.permissions) { const e = await navigator.permissions.query({ name: "geolocation" }); if (e.state === "denied") return; } } catch (e) { /* no informa */ }
+  pedirUbicacion().then(p => {
+    ponerMiPunto(p);
+    if (pestana === "ir" && !viaje.hasta && !eligiendo && !tocoMapa && enCamiri(p)) reencuadrar();
+  }).catch(() => {});
+}
+if (yaVio || !lineas.length || llegada) setTimeout(ubicarAlAbrir, 700);
+if (llegada) setTimeout(() => {
+  const p = puntoDeTexto(llegada);
+  history.replaceState(history.state, "", location.pathname + (/[?&]prueba/.test(location.search) ? "?prueba" : ""));
+  if (!p) { avisar("Ese enlace no trae la ubicación. Márquela en el mapa."); return; }
+  if (pestana !== "ir") irPestana("ir");
+  ponerPunto("hasta", { n: (param.get("n") || "").slice(0, 60) || nombreDePunto(p), sub: "Ubicación compartida", p });
+}, 750);
 $("barra").addEventListener("click", () => {
-  $("acerca-entidad").textContent = datos.entidad || "Municipio de Camiri";
   $("acerca-fecha").textContent = datos.generado ? new Date(datos.generado).toLocaleDateString("es-BO", { day: "numeric", month: "long", year: "numeric" }) : "—";
   caches && caches.keys ? caches.keys().then(k => { $("acerca-version").textContent = (k.find(x => x.startsWith("micros-camiri")) || "").replace("micros-camiri-", "") || "—"; }) : null;
   $("acerca").classList.add("ver");
@@ -2225,11 +2332,24 @@ $("b-acerca-ok").addEventListener("click", () => $("acerca").classList.remove("v
 const LETRA = "micros-letra-grande";
 function ponerLetra(si) {
   document.body.classList.toggle("letra-grande", si);
-  $("b-letra").textContent = "Aa · Letra más grande: " + (si ? "sí" : "no");
+  $("letra-si").setAttribute("aria-pressed", si);
+  $("letra-no").setAttribute("aria-pressed", !si);
   try { localStorage.setItem(LETRA, si ? "si" : "no"); } catch (e) { /* modo privado */ }
 }
 try { if (localStorage.getItem(LETRA) === "si") ponerLetra(true); } catch (e) { /* modo privado */ }
-$("b-letra").addEventListener("click", () => ponerLetra(!document.body.classList.contains("letra-grande")));
+$("letra-si").addEventListener("click", () => ponerLetra(true));
+$("letra-no").addEventListener("click", () => ponerLetra(false));
+// Enviar mi ubicación: un enlace que abre esta aplicación con el viaje hasta donde estoy
+$("b-mandar-ubic").addEventListener("click", () => {
+  avisar("Buscando su ubicación...");
+  pedirUbicacion().then(async p => {
+    const texto = "Estoy aquí. Para ver qué micro tomar para llegar, abra: " + enlaceA(p, "");
+    try {
+      if (navigator.share) await navigator.share({ title: "Micros Camiri", text: texto });
+      else window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank", "noopener");
+    } catch (e) { /* la persona cerró el cuadro */ }
+  }).catch(e => avisar(e));
+});
 const verRed = () => document.body.classList.toggle("sin-internet", !navigator.onLine);
 window.addEventListener("online", verRed);
 window.addEventListener("offline", verRed);
@@ -2238,6 +2358,7 @@ $("acerca").addEventListener("click", e => { if (e.target.id === "acerca") $("ac
 $("b-guia").addEventListener("click", () => { $("acerca").classList.remove("ver"); $("bienvenida").classList.add("ver"); });
 $("b-entendido").addEventListener("click", () => {
   $("bienvenida").classList.remove("ver");
+  ubicarAlAbrir();
   try { localStorage.setItem("micros-guia-vista", "si"); } catch (e) { /* modo privado */ }
 });
 
