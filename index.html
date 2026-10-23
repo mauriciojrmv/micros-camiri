@@ -118,6 +118,10 @@
                 transition: transform .34s cubic-bezier(.2, .8, .2, 1), opacity .25s ease; }
   .fab-centro svg { width: 24px; height: 24px; }
   .fab-centro.activo { color: #1a73e8; }
+  /* edición solo Líneas: sin menú de abajo ni botones que llevan a "Ir a un lugar" */
+  body.solo-lineas { --nav: var(--abajo); }
+  body.solo-lineas .nav, body.solo-lineas .acciones .boton.ir { display: none !important; }
+  body.solo-lineas .acciones { grid-template-columns: 1fr; }
   .fab-centro .navegar, body.giro .fab-centro .mira-ic { display: none; }
   body.giro .fab-centro .navegar { display: block; }
   /* modo brújula: el mapa (más grande que la pantalla, para que no queden esquinas vacías) gira alrededor de mi ubicación */
@@ -667,7 +671,10 @@ const lateral = window.matchMedia("(min-width: 760px), (orientation: landscape) 
 const calmo = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const FLECHA = '<svg class="i" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
 
-let seleccion = null, marcaYo = null, miPunto = null, ficha = 0, pestana = "ir", girando = false, relojGiro = null;
+// Edición solo Líneas (para el Alcalde): true. App completa: false. Lo cambia _proyecto/herramientas/hacer_edicion_lineas.py
+const SOLO_LINEAS = true;
+if (SOLO_LINEAS) document.body.classList.add("solo-lineas");
+let seleccion = null, marcaYo = null, miPunto = null, ficha = 0, pestana = SOLO_LINEAS ? "lineas" : "ir", girando = false, relojGiro = null;
 
 // ------------------------------------------------------------------ datos
 const grupos = new Map();
@@ -1196,7 +1203,7 @@ function pintarFicha(l) {
     c.className = "chip-c lugar";
     c.innerHTML = ICONO.pin + "<span></span>";
     c.querySelector("span").textContent = x.n;
-    c.title = "Cómo llegar a " + x.n;
+    c.title = (SOLO_LINEAS ? "Ver en el mapa: " : "Cómo llegar a ") + x.n;
     c.addEventListener("click", () => irAlLugar({ n: x.n, sub: x.sub, p: x.p }));
     fl.appendChild(c);
   });
@@ -2334,6 +2341,14 @@ function quitarViaje() {
 
 // Desde la pantalla de líneas: "cómo llegar" a una parada o a un lugar, con el planificador propio.
 function irAlLugar(x) {
+  if (SOLO_LINEAS) {                         // edición solo Líneas: el lugar se muestra en el mapa
+    if (!lateral.matches) animarHoja(paradas()[0], 260);
+    const m = L.marker(x.p, { interactive: false, keyboard: false, zIndexOffset: 900,
+      icon: L.divIcon({ className: "", iconSize: [0, 0], html: '<div class="pin" style="--c:#1f3864"></div>' }) }).addTo(capaMarcas);
+    m.getElement().firstChild.textContent = x.n;
+    mapa.flyTo(x.p, 17, { duration: calmo ? 0 : .7 });
+    return;
+  }
   viaje.hasta = x;
   if (!viaje.desde) viaje.desde = { n: "Mi ubicación", gps: true, p: null };
   viaje.opcion = null;
@@ -2433,6 +2448,7 @@ async function compartirViaje() {
 
 // ================================================================ pestañas
 function irPestana(p, desdeHistorial = false) {
+  if (SOLO_LINEAS) p = "lineas";
   const antes = pestana;
   pestana = p;
   document.body.dataset.pestana = p;
@@ -2604,6 +2620,10 @@ irPestana(deHash() ? "lineas" : "ir", true);
 if (deHash()) elegir(deHash(), true);
 setTimeout(() => { mapa.invalidateSize(); reencuadrar(false); $("entrada").classList.add("fuera"); }, 650);
 // La guía aparece solo la primera vez que se abre la aplicación en ese teléfono.
+if (SOLO_LINEAS) document.querySelector("#bienvenida ol").innerHTML =
+  '<li><b>1</b><span>Toque una <strong>línea</strong> para ver su recorrido, sus paradas y la foto del micro.</span></li>' +
+  '<li><b>2</b><span>Con <strong>Cerca de mí</strong> ve qué líneas pasan cerca de usted.</span></li>' +
+  '<li><b>3</b><span>Marque con la <strong>estrella</strong> las líneas que más usa.</span></li>';
 let yaVio = false;
 try { yaVio = localStorage.getItem("micros-guia-vista") === "si"; } catch (e) { /* modo privado */ }
 const param = new URLSearchParams(location.search);
@@ -2622,7 +2642,7 @@ async function ubicarAlAbrir() {
   }).catch(() => {});
 }
 if (yaVio || !lineas.length || llegada) setTimeout(ubicarAlAbrir, 700);
-if (llegada) setTimeout(() => {
+if (llegada && !SOLO_LINEAS) setTimeout(() => {
   const p = puntoDeTexto(llegada);
   history.replaceState(history.state, "", location.pathname + (/[?&]prueba/.test(location.search) ? "?prueba" : ""));
   if (!p) { avisar("Ese enlace no trae la ubicación. Márquela en el mapa."); return; }
